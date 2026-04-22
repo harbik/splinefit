@@ -7,8 +7,9 @@ use crate::Result;
 /// Builder for fitting a 1-D B-spline to a set of `(x, y)` data points.
 ///
 /// The degree of the spline is controlled by the const generic `K` (must be odd: 1, 3, or 5).
-/// Use the type aliases [`LinearSplineFit`], [`CubicSplineFit`], or [`QuinticSplineFit`] rather
-/// than naming the generic directly.
+/// Use the type aliases [`LinearSplineFit`](crate::LinearSplineFit),
+/// [`CubicSplineFit`](crate::CubicSplineFit), or [`QuinticSplineFit`](crate::QuinticSplineFit)
+/// rather than naming the generic directly.
 ///
 /// Construct with [`SplineCurveFit::new`], optionally call [`set_weights`](Self::set_weights),
 /// then call one of the three fit methods to obtain a [`SplineCurve`].

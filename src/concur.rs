@@ -11,7 +11,7 @@ use spliny::SplineCurve;
 ///
 /// The curve is parameterized by `u` and lives in an `N`-dimensional space.  The degree `K`
 /// must be odd (1, 3, or 5) and `N` must be between 1 and 10.
-/// Use the type aliases such as [`CubicSplineFit2D`] rather than naming the generics directly.
+/// Use the type aliases such as [`CubicSplineFit2D`](crate::CubicSplineFit2D) rather than naming the generics directly.
 ///
 /// Coordinates are interleaved in a flat `xn` vector: `[x₀, y₀, x₁, y₁, …]` for `N = 2`.
 ///

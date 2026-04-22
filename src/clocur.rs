@@ -11,7 +11,7 @@ use spliny::SplineCurve;
 /// form a closed loop.  The first and last data points **must coincide** to within 1e-10.
 ///
 /// Degree `K` must be odd (1, 3, or 5) and `N` must be between 1 and 10.
-/// Use the type aliases such as [`ClosedCubicSplineFit2D`] rather than naming the generics directly.
+/// Use the type aliases such as [`ClosedCubicSplineFit2D`](crate::ClosedCubicSplineFit2D) rather than naming the generics directly.
 #[derive(Clone)]
 pub struct ClosedParameterSplineCurveFit<const K: usize, const N: usize> {
     // input values
