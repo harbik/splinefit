@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.1] - 2026-04-22
+
 ### Fixed
 
 - **`fpcons` (open parametric curve engine)** — the x- and y-coefficient blocks were
@@ -84,5 +86,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `xtask` with `cargo xtask test` and `cargo xtask doc` commands.
 - Numerical correctness verified against SciPy reference values.
 
-[Unreleased]: https://github.com/harbik/splinefit/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/harbik/splinefit/compare/v0.1.1...HEAD
+[0.1.1]: https://github.com/harbik/splinefit/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/harbik/splinefit/releases/tag/v0.1.0
