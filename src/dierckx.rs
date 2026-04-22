@@ -349,7 +349,7 @@ fn fpchep(x: &[f64], m: i32, t: &[f64], n: i32, k: i32, ier: &mut i32) {
         let i_start = i1 - 1;
         let mm = i_start + m1;
         let mut i = i_start;
-        'inner: for j in k1..=nk1 {
+        for j in k1..=nk1 {
             let tj = t[j - 1];
             let j1 = j + k1;
             let tl = t[j1 - 1];
@@ -1076,7 +1076,7 @@ pub(crate) fn fpcurf(
 }
 
 /// Core parametric spline fitting engine (translates fppara.f).
-#[allow(clippy::too_many_arguments)]
+#[allow(dead_code, clippy::too_many_arguments)]
 fn fppara(
     iopt: i32, idim: i32, m: i32, u: &[f64], _mx: i32, x: &[f64], w: &[f64],
     ub: f64, ue: f64, k: i32, s: f64, nest: i32,
@@ -1368,6 +1368,7 @@ fn fppara(
 
 /// Compute ress = integral((b-x)^3*sin(par*x)) and resc = integral((b-x)^3*cos(par*x))
 /// over (a,b).
+#[allow(dead_code)]
 fn fpcsin(a: f64, b: f64, par: f64, sia: f64, coa: f64, sib: f64, cob: f64,
           ress: &mut f64, resc: &mut f64) {
     let ab = b - a;
@@ -1405,6 +1406,7 @@ fn fpcsin(a: f64, b: f64, par: f64, sia: f64, coa: f64, sib: f64, cob: f64,
 }
 
 /// Compute Fourier integrals of cubic B-splines.
+#[allow(dead_code)]
 fn fpbfou(t: &[f64], n: i32, par: f64, ress: &mut [f64], resc: &mut [f64]) {
     let n = n as usize;
     let nm3 = n - 3;
@@ -3252,6 +3254,314 @@ mod tests {
 
         println!("n={n}, fp={fp}, ier={ier}");
         assert!(ier <= 0, "expected ier <= 0, got {}", ier);
+    }
+
+    // ── Integration tests (formerly tests/integration.rs) ─────────────────────
+
+    #[test]
+    fn curfit_sin_interpolation() {
+        const M: usize = 9;
+        const K: i32 = 3;
+        const NEST: usize = M + K as usize + 1;
+        let lwrk = curfit_lwrk(M, K as usize, NEST);
+
+        let x: Vec<f64> = (0..M).map(|i| i as f64 * PI / (M - 1) as f64).collect();
+        let y: Vec<f64> = x.iter().map(|&xi| xi.sin()).collect();
+        let w = vec![1.0f64; M];
+
+        let (iopt, m_i, k, s, nest_i, lwrk_i, xb, xe) =
+            (0i32, M as i32, K, 0.0f64, NEST as i32, lwrk as i32, x[0], x[M - 1]);
+
+        let mut n = 0i32;
+        let mut t   = vec![0.0f64; NEST];
+        let mut c   = vec![0.0f64; NEST];
+        let mut fp  = 0.0f64;
+        let mut wrk = vec![0.0f64; lwrk];
+        let mut iwrk = vec![0i32; NEST];
+        let mut ier  = 0i32;
+
+        unsafe {
+            curfit_(
+                &iopt, &m_i, x.as_ptr(), y.as_ptr(), w.as_ptr(),
+                &xb, &xe, &k, &s, &nest_i,
+                &mut n, t.as_mut_ptr(), c.as_mut_ptr(), &mut fp,
+                wrk.as_mut_ptr(), &lwrk_i, iwrk.as_mut_ptr(), &mut ier,
+            );
+        }
+
+        assert_eq!(ier, -1, "expected interpolating spline (ier=-1), got {ier}");
+        assert_eq!(n, 13, "scipy gives n=13 for this input, got {n}");
+        assert!(fp < 1e-14, "fp should be ~0 for interpolation, got {:.3e}", fp);
+
+        let t_ref = [
+            0.0, 0.0, 0.0, 0.0,
+            PI / 4.0, 3.0 * PI / 8.0, PI / 2.0, 5.0 * PI / 8.0, 3.0 * PI / 4.0,
+            PI, PI, PI, PI,
+        ];
+        for (i, (&got, &want)) in t[..n as usize].iter().zip(t_ref.iter()).enumerate() {
+            assert!((got - want).abs() < 1e-10, "t[{i}]: got {:.15}, want {:.15}", got, want);
+        }
+
+        let mut y_spl = vec![0.0f64; M];
+        let mut spl_ier = 0i32;
+        unsafe {
+            splev_(t.as_ptr(), &n, c.as_ptr(), &k,
+                   x.as_ptr(), y_spl.as_mut_ptr(), &m_i, &mut spl_ier);
+        }
+        assert_eq!(spl_ier, 0);
+        for i in 0..M {
+            let err = (y_spl[i] - y[i]).abs();
+            assert!(err < 1e-13,
+                "splev residual at x[{i}]={:.4}: |{} - {}| = {err:.3e}",
+                x[i], y_spl[i], y[i]);
+        }
+    }
+
+    #[test]
+    fn curfit_sin_smoothing() {
+        const M: usize = 20;
+        const K: i32 = 3;
+        const NEST: usize = M + K as usize + 1;
+        let lwrk = curfit_lwrk(M, K as usize, NEST);
+
+        let x: Vec<f64> = (0..M).map(|i| i as f64 * 2.0 * PI / (M - 1) as f64).collect();
+        let y: Vec<f64> = x.iter().map(|&xi| xi.sin()).collect();
+        let w = vec![1.0f64; M];
+        let s = 0.05f64;
+
+        let (iopt, m_i, k, nest_i, lwrk_i, xb, xe) =
+            (0i32, M as i32, K, NEST as i32, lwrk as i32, x[0], x[M - 1]);
+
+        let mut n = 0i32;
+        let mut t   = vec![0.0f64; NEST];
+        let mut c   = vec![0.0f64; NEST];
+        let mut fp  = 0.0f64;
+        let mut wrk = vec![0.0f64; lwrk];
+        let mut iwrk = vec![0i32; NEST];
+        let mut ier  = 0i32;
+
+        unsafe {
+            curfit_(
+                &iopt, &m_i, x.as_ptr(), y.as_ptr(), w.as_ptr(),
+                &xb, &xe, &k, &s, &nest_i,
+                &mut n, t.as_mut_ptr(), c.as_mut_ptr(), &mut fp,
+                wrk.as_mut_ptr(), &lwrk_i, iwrk.as_mut_ptr(), &mut ier,
+            );
+        }
+
+        assert!(ier <= 0, "expected success (ier ≤ 0), got ier={ier}");
+        assert_eq!(n, 11, "scipy gives n=11 for s=0.05, got {n}");
+
+        if ier == 0 {
+            let rel = (fp - s).abs() / s;
+            assert!(rel <= 0.002,
+                "|fp - s| / s = {rel:.5}  (fp={fp:.6e}, s={s})");
+        }
+
+        let k1 = (K + 1) as usize;
+        let nv  = n as usize;
+        for i in k1..(nv - k1 - 1) {
+            assert!(t[i] < t[i + 1], "knots not sorted: t[{i}]={} ≥ t[{}]={}", t[i], i+1, t[i+1]);
+        }
+
+        let x_dense: Vec<f64> = (0..100).map(|i| i as f64 * 2.0 * PI / 99.0).collect();
+        let y_ref:   Vec<f64> = x_dense.iter().map(|&xi| xi.sin()).collect();
+        let m_dense = 100i32;
+        let mut y_spl = vec![0.0f64; 100];
+        let mut spl_ier = 0i32;
+        unsafe {
+            splev_(t.as_ptr(), &n, c.as_ptr(), &k,
+                   x_dense.as_ptr(), y_spl.as_mut_ptr(), &m_dense, &mut spl_ier);
+        }
+        assert_eq!(spl_ier, 0);
+        let max_err = y_spl.iter().zip(y_ref.iter()).map(|(&a, &b)| (a - b).abs())
+                           .fold(0.0f64, f64::max);
+        assert!(max_err < 0.2, "max approximation error = {max_err:.4}");
+    }
+
+    #[test]
+    fn curfit_quadratic_exact_fit() {
+        let x = vec![0.0f64, 0.25, 0.5, 0.75, 1.0];
+        let y: Vec<f64> = x.iter().map(|&xi| xi * xi).collect();
+        let w = vec![1.0f64; 5];
+        let (m, k) = (5usize, 2i32);
+        let nest = (m + k as usize + 1) as i32;
+        let lwrk = curfit_lwrk(m, k as usize, nest as usize) as i32;
+
+        let (iopt, m_i, s, xb, xe) = (0i32, m as i32, 0.0f64, 0.0f64, 1.0f64);
+
+        let mut n = 0i32;
+        let mut t   = vec![0.0f64; nest as usize];
+        let mut c   = vec![0.0f64; nest as usize];
+        let mut fp  = 0.0f64;
+        let mut wrk = vec![0.0f64; lwrk as usize];
+        let mut iwrk = vec![0i32; nest as usize];
+        let mut ier  = 0i32;
+
+        unsafe {
+            curfit_(&iopt, &m_i, x.as_ptr(), y.as_ptr(), w.as_ptr(), &xb, &xe, &k, &s, &nest,
+                    &mut n, t.as_mut_ptr(), c.as_mut_ptr(), &mut fp,
+                    wrk.as_mut_ptr(), &lwrk, iwrk.as_mut_ptr(), &mut ier);
+        }
+
+        assert_eq!(ier, -1, "expected interpolation (ier=-1), got {ier}");
+        assert_eq!(n, 8, "scipy gives n=8, got {n}");
+
+        let t_ref = [0.0f64, 0.0, 0.0, 0.375, 0.625, 1.0, 1.0, 1.0];
+        for (i, (&got, &want)) in t[..n as usize].iter().zip(t_ref.iter()).enumerate() {
+            assert!((got - want).abs() < 1e-12, "t[{i}]: got {got:.15}, want {want:.15}");
+        }
+
+        let mut y_spl = vec![0.0f64; m];
+        let mut spl_ier = 0i32;
+        unsafe {
+            splev_(t.as_ptr(), &n, c.as_ptr(), &k,
+                   x.as_ptr(), y_spl.as_mut_ptr(), &m_i, &mut spl_ier);
+        }
+        assert_eq!(spl_ier, 0);
+        for i in 0..m {
+            let err = (y_spl[i] - y[i]).abs();
+            assert!(err < 1e-13, "residual[{i}]: |{} - {}| = {err:.3e}", y_spl[i], y[i]);
+        }
+    }
+
+    #[test]
+    fn curfit_large_s_gives_polynomial() {
+        const M: usize = 10;
+        const K: i32 = 3;
+        const NEST: usize = M + K as usize + 1;
+        let lwrk = curfit_lwrk(M, K as usize, NEST);
+
+        let x: Vec<f64> = (0..M).map(|i| i as f64 / (M - 1) as f64).collect();
+        let y: Vec<f64> = x.iter().map(|&xi| xi.sin()).collect();
+        let w = vec![1.0f64; M];
+        let s = 100.0f64;
+
+        let (iopt, m_i, k, nest_i, lwrk_i, xb, xe) =
+            (0i32, M as i32, K, NEST as i32, lwrk as i32, x[0], x[M - 1]);
+
+        let mut n = 0i32;
+        let mut t   = vec![0.0f64; NEST];
+        let mut c   = vec![0.0f64; NEST];
+        let mut fp  = 0.0f64;
+        let mut wrk = vec![0.0f64; lwrk];
+        let mut iwrk = vec![0i32; NEST];
+        let mut ier  = 0i32;
+
+        unsafe {
+            curfit_(&iopt, &m_i, x.as_ptr(), y.as_ptr(), w.as_ptr(), &xb, &xe, &k, &s, &nest_i,
+                    &mut n, t.as_mut_ptr(), c.as_mut_ptr(), &mut fp,
+                    wrk.as_mut_ptr(), &lwrk_i, iwrk.as_mut_ptr(), &mut ier);
+        }
+
+        assert_eq!(ier, -2, "expected polynomial result (ier=-2), got {ier}");
+        assert_eq!(n, 2 * (K + 1), "n must be 2*(k+1)={}, got {n}", 2 * (K + 1));
+
+        let t_ref = [0.0f64, 0.0, 0.0, 0.0, 1.0, 1.0, 1.0, 1.0];
+        for (i, (&got, &want)) in t[..n as usize].iter().zip(t_ref.iter()).enumerate() {
+            assert!((got - want).abs() < 1e-12, "t[{i}]: got {got:.15}, want {want:.15}");
+        }
+    }
+
+    #[test]
+    fn clocur_unit_circle_interpolation() {
+        const M: usize = 8;
+        const K: i32 = 3;
+        const IDIM: usize = 2;
+        const NEST: usize = M + 2 * K as usize;
+        const NC: usize   = NEST * IDIM;
+        let lwrk = M * (K as usize + 1) + NEST * (7 + IDIM + 5 * K as usize);
+
+        let theta: Vec<f64> = (0..M).map(|i| 2.0 * PI * i as f64 / M as f64).collect();
+        let xy: Vec<f64>    = theta.iter().flat_map(|&th| [th.cos(), th.sin()]).collect();
+        let w = vec![1.0f64; M];
+
+        let (iopt, ipar, idim, m_i, mx, k, s, nest_i, nc_i, lwrk_i) = (
+            0i32, 0i32, IDIM as i32, M as i32, (M * IDIM) as i32,
+            K, 0.0f64, NEST as i32, NC as i32, lwrk as i32,
+        );
+
+        let mut u    = vec![0.0f64; M];
+        let mut n    = 0i32;
+        let mut t    = vec![0.0f64; NEST];
+        let mut c    = vec![0.0f64; NC];
+        let mut fp   = 0.0f64;
+        let mut wrk  = vec![0.0f64; lwrk];
+        let mut iwrk = vec![0i32; NEST];
+        let mut ier  = 0i32;
+
+        unsafe {
+            clocur_(
+                &iopt, &ipar, &idim, &m_i,
+                u.as_mut_ptr(), &mx, xy.as_ptr(), w.as_ptr(),
+                &k, &s, &nest_i, &mut n,
+                t.as_mut_ptr(), &nc_i, c.as_mut_ptr(), &mut fp,
+                wrk.as_mut_ptr(), &lwrk_i, iwrk.as_mut_ptr(), &mut ier,
+            );
+        }
+
+        assert_eq!(ier, -1, "expected interpolating closed curve (ier=-1), got {ier}");
+        assert_eq!(n, NEST as i32, "expected n={NEST} knots, got {n}");
+        assert!(fp < 1e-13, "fp should be ~0 for interpolation, got {fp:.3e}");
+
+        let m_eval   = M as i32;
+        let mx_eval  = (M * IDIM) as i32;
+        let mut xy_out = vec![0.0f64; M * IDIM];
+        let mut curev_ier = 0i32;
+        unsafe {
+            curev_(
+                &idim, t.as_ptr(), &n, c.as_ptr(), &nc_i, &k,
+                u.as_ptr(), &m_eval, xy_out.as_mut_ptr(), &mx_eval, &mut curev_ier,
+            );
+        }
+        assert_eq!(curev_ier, 0, "curev_ returned error {curev_ier}");
+
+        for i in 0..M-1 {
+            let dx = (xy_out[2 * i]     - xy[2 * i]    ).abs();
+            let dy = (xy_out[2 * i + 1] - xy[2 * i + 1]).abs();
+            assert!(dx < 1e-12, "x residual at point {}: {:.3e}", i, dx);
+            assert!(dy < 1e-12, "y residual at point {}: {:.3e}", i, dy);
+        }
+    }
+
+    #[test]
+    fn curfit_iopt1_restart_consistent() {
+        const M: usize = 20;
+        const K: i32 = 3;
+        const NEST: usize = M + K as usize + 1;
+        let lwrk = curfit_lwrk(M, K as usize, NEST);
+
+        let x: Vec<f64> = (0..M).map(|i| i as f64 / (M - 1) as f64).collect();
+        let y: Vec<f64> = x.iter().map(|&xi| (3.0 * PI * xi).sin()).collect();
+        let w = vec![1.0f64; M];
+        let s = 0.02f64;
+        let (m_i, k, nest_i, lwrk_i, xb, xe) =
+            (M as i32, K, NEST as i32, lwrk as i32, x[0], x[M - 1]);
+
+        let mut n0 = 0i32;
+        let mut t0   = vec![0.0f64; NEST];
+        let mut c0   = vec![0.0f64; NEST];
+        let mut fp0  = 0.0f64;
+        let mut wrk0 = vec![0.0f64; lwrk];
+        let mut iwrk0 = vec![0i32; NEST];
+        let mut ier0  = 0i32;
+        unsafe {
+            curfit_(&0i32, &m_i, x.as_ptr(), y.as_ptr(), w.as_ptr(), &xb, &xe, &k, &s, &nest_i,
+                    &mut n0, t0.as_mut_ptr(), c0.as_mut_ptr(), &mut fp0,
+                    wrk0.as_mut_ptr(), &lwrk_i, iwrk0.as_mut_ptr(), &mut ier0);
+        }
+        assert!(ier0 <= 0, "fresh call failed: ier0={ier0}");
+
+        let mut fp1  = 0.0f64;
+        let mut ier1 = 0i32;
+        unsafe {
+            curfit_(&1i32, &m_i, x.as_ptr(), y.as_ptr(), w.as_ptr(), &xb, &xe, &k, &s, &nest_i,
+                    &mut n0, t0.as_mut_ptr(), c0.as_mut_ptr(), &mut fp1,
+                    wrk0.as_mut_ptr(), &lwrk_i, iwrk0.as_mut_ptr(), &mut ier1);
+        }
+        assert!(ier1 <= 0, "restart call failed: ier1={ier1}");
+        assert!(fp1 <= fp0 + s * 0.01,
+            "restart residual {fp1:.6e} is worse than fresh {fp0:.6e}");
     }
 
 }

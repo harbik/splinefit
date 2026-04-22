@@ -1,11 +1,33 @@
+[workspace]
+members = ["xtask"]
+
 [package]
-name = "dierckx-rs"
+name = "splinefit"
 version = "0.1.0"
 edition = "2021"
-description = "Pure-Rust implementation of Dierckx' B-Spline curve and surface fitting library"
+description = "B-spline curve and surface fitting — pure-Rust Dierckx engine with ergonomic API"
 authors = ["Gerard Harbers", "Harbers Bik LLC"]
-repository = "https://github.com/harbik/dierckx-rs"
+repository = "https://github.com/harbik/splinefit"
+documentation = "https://docs.rs/splinefit"
+readme = "README.md"
 keywords = ["spline", "interpolation", "curve", "smoothing", "fitting"]
+categories = ["science", "mathematics", "algorithms"]
 license = "MIT OR Apache-2.0"
 
 [dependencies]
+spliny = "0.3"
+csv = "1.1"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+plotters = { version = "0.3", optional = true }
+
+[features]
+default = []
+plot = ["dep:plotters"]
+
+[dev-dependencies]
+
+# README.md is generated from the //! doc-comments in src/lib.rs.
+# Install: cargo install cargo-rdme
+# Update:  cargo rdme
+[package.metadata.cargo-rdme]
