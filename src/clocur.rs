@@ -44,16 +44,16 @@ impl<const K: usize, const N: usize> ClosedParameterSplineCurveFit<K, N> {
     pub fn new(u: Vec<f64>, xn: Vec<f64>) -> Result<Self> {
         let k = K as i32;
         if ![1, 3, 5].contains(&k) {
-            return Err(FitError(208).into());
+            return Err(FitError::new(208).into());
         };
         let idim = if (1..=10).contains(&N) {
             N as i32
         } else {
-            return Err(FitError(200).into());
+            return Err(FitError::new(200).into());
         };
         let m = u.len() as i32;
         if m < 2 {
-            return Err(FitError(201).into());
+            return Err(FitError::new(201).into());
         };
         let mx = m * idim;
         if xn.len() as i32 != mx {
@@ -111,7 +111,7 @@ impl<const K: usize, const N: usize> ClosedParameterSplineCurveFit<K, N> {
             self.w = weights;
             Ok(self)
         } else {
-            Err(FitError(203).into())
+            Err(FitError::new(203).into())
         }
     }
 
@@ -129,6 +129,7 @@ impl<const K: usize, const N: usize> ClosedParameterSplineCurveFit<K, N> {
         if let Some(knots) = knots {
             self.n = knots.len() as i32;
             self.t = knots;
+            self.t.resize(self.nest as usize, 0.0);
         }
         let mut ierr = 0;
         unsafe {
@@ -165,7 +166,7 @@ impl<const K: usize, const N: usize> ClosedParameterSplineCurveFit<K, N> {
         if ierr <= 0 {
             Ok(self.into())
         } else {
-            Err(FitError(ierr).into())
+            Err(FitError::new(ierr).into())
         }
     }
 
@@ -173,7 +174,7 @@ impl<const K: usize, const N: usize> ClosedParameterSplineCurveFit<K, N> {
     pub fn smoothing_spline(mut self, rms: f64) -> Result<SplineCurve<K, N>> {
         let ierr = self.clocur(0, Some(rms), None);
         if ierr > 0 {
-            Err(FitError(ierr).into())
+            Err(FitError::new(ierr).into())
         } else {
             Ok(self.into())
         }
@@ -196,7 +197,7 @@ impl<const K: usize, const N: usize> ClosedParameterSplineCurveFit<K, N> {
         let n_iter = n_iter.unwrap_or(40);
         let ierr = self.clocur(0, Some(rms_start), None);
         if ierr > 0 {
-            return Err(FitError(ierr).into());
+            return Err(FitError::new(ierr).into());
         }
         let mut rms = self.e_rms.unwrap();
         let mut n_prev;
@@ -207,18 +208,18 @@ impl<const K: usize, const N: usize> ClosedParameterSplineCurveFit<K, N> {
             let ierr = self.clocur(1, Some(rms * rms_scale_ratio), None);
             rms = self.e_rms.unwrap();
             if ierr > 0 {
-                return Err(FitError(ierr).into());
+                return Err(FitError::new(ierr).into());
             }
             if converged(self.n, self.n - n_prev, rms, rms_prev - rms) {
                 let ierr = self.clocur(0, Some(rms_prev), None);
                 if ierr > 0 {
-                    return Err(FitError(ierr).into());
+                    return Err(FitError::new(ierr).into());
                 } else {
                     return Ok(self.into());
                 }
             };
         }
-        Err(FitError(206).into())
+        Err(FitError::new(206).into())
     }
 }
 

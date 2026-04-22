@@ -62,23 +62,23 @@ impl<const K: usize> SplineCurveFit<K> {
             self.w = weights;
             Ok(self)
         } else {
-            Err(FitError(203).into())
+            Err(FitError::new(203).into())
         }
     }
 
     fn curfit(&mut self, iopt: i32, e_rms: Option<f64>, knots: Option<Vec<f64>>) -> i32 {
         let k = K as i32;
         let m = self.x.len() as i32;
-        let nest = m * k + 1;
+        if let Some(knots) = knots {
+            self.n = knots.len() as i32;
+            self.t = knots;
+        }
+        let nest = self.t.len() as i32;
         let lwrk = self.wrk.len() as i32;
         let mut fp = 0.0;
         let s = if let Some(e) = e_rms { m as f64 * e.powi(2) } else { 0.0 };
         let mut ierr = 0;
 
-        if let Some(knots) = knots {
-            self.n = knots.len() as i32;
-            self.t = knots;
-        }
         unsafe {
             curfit_(
                 &iopt, &m,
@@ -91,6 +91,9 @@ impl<const K: usize> SplineCurveFit<K> {
                 &mut ierr,
             );
         }
+        // RMS residual: only meaningful when all weights are 1.0.
+        // With non-unit weights fp is the weighted sum of squared residuals,
+        // so this value is an approximation when weights differ.
         self.e_rms = Some((fp / m as f64).sqrt());
         ierr
     }
@@ -105,21 +108,21 @@ impl<const K: usize> SplineCurveFit<K> {
         let tb = (self.x[0] / dt).ceil() * dt;
         let te = (self.x[m - 1] / dt).floor() * dt;
         let n = ((te - tb) / dt).round() as usize;
-        if n == 0 { return Err(FitError(205).into()) }
+        if n == 0 { return Err(FitError::new(205).into()) }
 
         let mut t: Vec<f64> = Vec::with_capacity(n + 2 * (K + 1) + 1);
         t.extend(
             repeat(tb).take(K + 1)
-                .chain(repeat(dt).scan(tb, |s, dx| {
+                .chain(repeat(dt).scan(tb + dt, |s, dx| {
                     let t = *s;
                     *s += dx;
-                    if t <= te { Some(t) } else { None }
+                    if t < te { Some(t) } else { None }
                 }))
                 .chain(repeat(te).take(K + 1)),
         );
 
         let ierr = self.curfit(-1, Some(0.0), Some(t));
-        if ierr <= 0 { Ok(self.into()) } else { Err(FitError(ierr).into()) }
+        if ierr <= 0 { Ok(self.into()) } else { Err(FitError::new(ierr).into()) }
     }
 
     /// Fit a spline that passes exactly through all data points.
@@ -127,7 +130,7 @@ impl<const K: usize> SplineCurveFit<K> {
     /// Equivalent to setting the smoothing factor `s = 0`.
     pub fn interpolating_spline(mut self) -> Result<SplineCurve<K, 1>> {
         let ierr = self.curfit(0, Some(0.0), None);
-        if ierr <= 0 { Ok(self.into()) } else { Err(FitError(ierr).into()) }
+        if ierr <= 0 { Ok(self.into()) } else { Err(FitError::new(ierr).into()) }
     }
 
     /// Fit a smoothing spline with the fewest knots whose RMS error is ≤ `rms`.
@@ -137,7 +140,7 @@ impl<const K: usize> SplineCurveFit<K> {
     /// produces a smoother curve with fewer knots.
     pub fn smoothing_spline(mut self, rms: f64) -> Result<SplineCurve<K, 1>> {
         let ierr = self.curfit(0, Some(rms), None);
-        if ierr <= 0 { Ok(self.into()) } else { Err(FitError(ierr).into()) }
+        if ierr <= 0 { Ok(self.into()) } else { Err(FitError::new(ierr).into()) }
     }
 }
 

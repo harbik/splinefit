@@ -59,12 +59,12 @@ impl<const K:usize, const N:usize> ParameterSplineCurveFit<K, N> {
     ) -> Result<Self> {
 
         let k = K as i32;
-        if ![1,3,5].contains(&(k as i32)) { return Err(FitError(208).into()) };
+        if ![1,3,5].contains(&(k as i32)) { return Err(FitError::new(208).into()) };
         let idim = if (1..=10).contains(&N) { N as i32 } else {
-                return Err(FitError(200).into())
+                return Err(FitError::new(200).into())
             };
         let m = u.len() as i32; // number of coordinates
-        if m<2 {return Err(FitError(201).into())};
+        if m<2 {return Err(FitError::new(201).into())};
         let mx = m * idim;
         if xn.len() as i32 != mx { return Err(FitError::new(202).into())}
         let w_vec = vec![1.0;m as usize];
@@ -92,16 +92,12 @@ impl<const K:usize, const N:usize> ParameterSplineCurveFit<K, N> {
 
     /// Return the parameter values `u` used in the fit.
     pub fn u(&self) -> Vec<f64> {
-        let mut v: Vec<f64> = Vec::with_capacity(self.n as usize);
-        v.extend_from_slice(&self.u[0..self.n as usize]);
-        v
+        self.u[..self.m as usize].to_vec()
     }
 
     /// Return the interleaved coordinate data `xn` used in the fit.
     pub fn xn(&self) -> Vec<f64> {
-        let mut v: Vec<f64> = Vec::with_capacity((self.n*self.idim) as usize);
-        v.extend_from_slice(&self.xn[0..(self.n*self.idim) as usize]);
-        v
+        self.xn[..(self.m * self.idim) as usize].to_vec()
     }
 
     /// Override the per-point weights. `weights` must have the same length as `u`.
@@ -110,7 +106,7 @@ impl<const K:usize, const N:usize> ParameterSplineCurveFit<K, N> {
             self.w = weights;
             Ok(self)
         } else {
-            Err(FitError(203).into())
+            Err(FitError::new(203).into())
         }
     }
 
@@ -124,7 +120,7 @@ impl<const K:usize, const N:usize> ParameterSplineCurveFit<K, N> {
             self.ib = D as i32 -1;
             Ok(self)
         } else {
-            Err(FitError(204).into())
+            Err(FitError::new(204).into())
         }
     }
 
@@ -137,7 +133,7 @@ impl<const K:usize, const N:usize> ParameterSplineCurveFit<K, N> {
             self.ie = D as i32 -1;
             Ok(self)
         } else {
-            Err(FitError(204).into())
+            Err(FitError::new(204).into())
         }
     }
 
@@ -158,6 +154,7 @@ impl<const K:usize, const N:usize> ParameterSplineCurveFit<K, N> {
         if let Some(knots) = knots {
             self.n = knots.len() as i32;
             self.t = knots;
+            self.t.resize(self.nest as usize, 0.0);
         }
         let mut ierr = 0;
         unsafe {
@@ -205,15 +202,15 @@ impl<const K:usize, const N:usize> ParameterSplineCurveFit<K, N> {
         let tb = ((self.u[0]*(1.0+f64::EPSILON))/dt).ceil() * dt;
         let te = ((self.u[m-1]*(1.0-f64::EPSILON))/dt).floor() * dt;
         let n = ((te - tb)/dt).round() as usize;
-        if n == 0 { return Err(FitError(205).into()) };
+        if n == 0 { return Err(FitError::new(205).into()) };
         let mut t: Vec<f64> = Vec::with_capacity(n + 2 * (K + 1) + 1);
         t.extend( repeat(tb).take(K+1) // begin padding, needed for spline evaluation
             .chain(
-                repeat(dt).scan(tb,
+                repeat(dt).scan(tb + dt,
                     |s, dx|{
                         let t=*s;
                         *s+=dx;
-                        if t<=te {
+                        if t<te {
                             Some(t)
                         } else {
                             None
@@ -229,7 +226,7 @@ impl<const K:usize, const N:usize> ParameterSplineCurveFit<K, N> {
         if ierr <= 0 {
             Ok(self.into())
         } else {
-            Err(FitError(ierr).into())
+            Err(FitError::new(ierr).into())
         }
     }
 
@@ -239,7 +236,7 @@ impl<const K:usize, const N:usize> ParameterSplineCurveFit<K, N> {
         if ierr<=0  {
             Ok(self.into())
         } else {
-            Err(FitError(ierr).into())
+            Err(FitError::new(ierr).into())
         }
     }
 
@@ -247,7 +244,7 @@ impl<const K:usize, const N:usize> ParameterSplineCurveFit<K, N> {
     pub fn smoothing_spline(mut self, rms: f64) -> Result<SplineCurve<K,N>>{
         let ierr= self.concur(0, Some(rms), None);
         if ierr>0 {
-            Err(FitError(ierr).into())
+            Err(FitError::new(ierr).into())
         } else {
             Ok(self.into())
         }
@@ -269,7 +266,7 @@ impl<const K:usize, const N:usize> ParameterSplineCurveFit<K, N> {
         let n_iter = n_iter.unwrap_or(40);
         let ierr= self.concur(0, Some(rms_start), None);
         if ierr>0 {
-            return Err(FitError(ierr).into())
+            return Err(FitError::new(ierr).into())
         }
         let mut rms = self.e_rms.unwrap();
         let mut n_prev;
@@ -280,18 +277,18 @@ impl<const K:usize, const N:usize> ParameterSplineCurveFit<K, N> {
             let ierr= self.concur(1, Some(rms * rms_scale_ratio), None);
             rms = self.e_rms.unwrap();
             if ierr>0 {
-                return Err(FitError(ierr).into())
+                return Err(FitError::new(ierr).into())
             }
             if converged(self.n, self.n-n_prev, rms, rms_prev - rms) {
                 let ierr = self.concur(0, Some(rms_prev), None);
                 if ierr>0 {
-                    return Err(FitError(ierr).into())
+                    return Err(FitError::new(ierr).into())
                 } else {
                     return Ok(self.into())
                 }
             };
         }
-        Err(FitError(206).into())
+        Err(FitError::new(206).into())
     }
 
 }

@@ -1667,8 +1667,11 @@ fn fpadpo(idim: i32, t: &[f64], n: i32, c: &mut [f64], nc: i32, k: i32,
             let mut n2 = 0i32;
             for _i in 0..idim {
                 let mut nn_out = 0i32;
-                fpinst(0, t1, n1 as i32, &cc[j_base..], k, t[l1], l_v as i32,
-                       t2, &mut nn_out, &mut cc[j_base..].to_vec().as_mut_slice()[..], n as i32);
+                let mut cc_out = vec![0.0f64; n];
+                fpinst(0, t1, n1 as i32, &cc[j_base..j_base + n1], k, t[l1], l_v as i32,
+                       t2, &mut nn_out, &mut cc_out, n as i32);
+                let nk1_out = (nn_out as usize).saturating_sub(k as usize + 1);
+                cc[j_base..j_base + nk1_out].copy_from_slice(&cc_out[..nk1_out]);
                 // copy t2 back to t1
                 n2 = nn_out;
                 j_base += n;
@@ -3073,11 +3076,11 @@ pub unsafe extern "C" fn sproot_(
     let c_sl = std::slice::from_raw_parts(c, n_v);
     let zero_sl = std::slice::from_raw_parts_mut(zero, mest_v);
     let n4 = n_v - 4;
-    // check t is non-decreasing at ends, strictly increasing interior
-    let mut jv = n_v;
-    for _i in 0..3 { if t_sl[jv - n_v] > t_sl[jv - n_v + 1] { return; }
-                     if t_sl[n_v - jv + n_v - 1] < t_sl[n_v - jv + n_v - 2] { return; }
-                     jv -= 1; }
+    // check t is non-decreasing at the first and last 3 knots
+    for i in 0..3 {
+        if t_sl[i] > t_sl[i + 1] { return; }
+        if t_sl[n_v - i - 1] < t_sl[n_v - i - 2] { return; }
+    }
     for i in 3..n4 { if t_sl[i] >= t_sl[i+1] { return; } }
     *ier = 0;
     let mut m_count = 0i32;

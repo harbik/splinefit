@@ -144,7 +144,7 @@ pub type ClosedQuinticSplineFit3D = ClosedParameterSplineCurveFit<5,3>;
 pub struct FitError(i32);
 
 impl FitError {
-    fn new(ierr: i32) -> Self { Self(ierr) }
+    pub(crate) fn new(ierr: i32) -> Self { Self(ierr) }
 }
 
 impl fmt::Display for FitError {
