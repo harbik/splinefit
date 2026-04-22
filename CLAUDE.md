@@ -105,6 +105,26 @@ a high-level wrapper. Keep them; they will be needed when surface/Fourier fittin
 
 Run all tests: `cargo test`
 
+## Release checklist
+
+When cutting a new release (patch, minor, or major):
+
+1. Bump the version in `Cargo.toml`.
+2. Update the version string in the `README.md` installation snippet
+   (the `splinefit = "x.y.z"` line in the `[dependencies]` example).
+3. In `CHANGELOG.md`:
+   - Rename `[Unreleased]` to the new version with today's date.
+   - Add a blank `## [Unreleased]` section above it.
+   - Add the comparison link at the bottom:
+     `[x.y.z]: https://github.com/harbik/splinefit/compare/vPREV...vNEW`
+   - Update the `[Unreleased]` link to point to `vNEW...HEAD`.
+4. Run `cargo test` — all tests must pass.
+5. Run `cargo publish --dry-run` — must succeed with no warnings.
+6. Commit: `git commit -m "Release vx.y.z"`.
+7. Tag: `git tag vx.y.z`.
+8. Push commits and tag: `git push && git push origin vx.y.z`.
+9. Publish: `cargo publish`.
+
 ## Adding a new high-level fit type
 
 1. Identify which low-level function in `dierckx.rs` implements it (e.g. `percur_` for
