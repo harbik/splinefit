@@ -3382,7 +3382,7 @@ mod tests {
         assert_eq!(spl_ier, 0);
         let max_err = y_spl.iter().zip(y_ref.iter()).map(|(&a, &b)| (a - b).abs())
                            .fold(0.0f64, f64::max);
-        assert!(max_err < 0.2, "max approximation error = {max_err:.4}");
+        assert!(max_err < 0.1, "max approximation error = {max_err:.4}");
     }
 
     #[test]
