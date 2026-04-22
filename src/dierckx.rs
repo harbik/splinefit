@@ -508,8 +508,8 @@ fn fpintb(t: &[f64], n: i32, bint: &mut [f64], nk1: i32, x: f64, y: f64) {
     let mut aint_arr = [0.0f64; 6];
     let mut h = [0.0f64; 6];
     let mut h1 = [0.0f64; 6];
-    let mut ia = 0usize;
-    let mut ib = 0usize;
+    let mut ia = 0i32;
+    let mut ib = 0i32;
     for it in 1..=2 {
         // search for knot interval
         loop {
@@ -539,24 +539,27 @@ fn fpintb(t: &[f64], n: i32, bint: &mut [f64], nk1: i32, x: f64, y: f64) {
             }
         }
         if it == 1 {
-            let lk2 = l - k;
+            let lk2 = l as i32 - k as i32;
             ia = lk2 - 1; // 0-based
             for i in 1..=k1 {
-                if lk2 + i - 2 < nk1 {
-                    bint[lk2 + i - 2] = -aint_arr[i-1];
+                let idx = (lk2 + i as i32 - 2) as usize;
+                if idx < nk1 {
+                    bint[idx] = -aint_arr[i-1];
                 }
             }
             arg = b;
         } else {
-            let lk2 = l - k;
-            ib = lk2 - 2; // ib = lk-1-1 = lk2-2 (0-based)
+            let lk2 = l as i32 - k as i32;
+            ib = lk2 - 2; // ib = lk-1-1 = lk2-2 (0-based), may be negative
             for i in 1..=k1 {
-                if lk2 + i - 2 < nk1 {
-                    bint[lk2 + i - 2] += aint_arr[i-1];
+                let idx = (lk2 + i as i32 - 2) as usize;
+                if idx < nk1 {
+                    bint[idx] += aint_arr[i-1];
                 }
             }
             if ib >= ia {
                 for i in ia..=ib {
+                    let i = i as usize;
                     if i < nk1 { bint[i] += 1.0; }
                 }
             }
@@ -1215,7 +1218,7 @@ fn fppara(
                 for j2 in 1..=idim {
                     let mut fac = 0.0f64;
                     let mut j1_v = l0;
-                    for j in 1..=k1 { j1_v += 1; fac += c[j1_v - 1 + (j2-1)*nest] * q[it-1+(j-1)*m]; }
+                    for j in 1..=k1 { j1_v += 1; fac += c[j1_v - 1] * q[it-1+(j-1)*m]; }
                     jj += 1;
                     term += (w[it-1] * (fac - x[jj-1])).powi(2);
                     l0 += nest;
@@ -1341,7 +1344,7 @@ fn fppara(
                 for j2 in 1..=idim {
                     let mut fac = 0.0f64;
                     let mut j1v = l0;
-                    for j in 1..=k1 { j1v += 1; fac += c[j1v-1+(j2-1)*nest] * q[it-1+(j-1)*m]; }
+                    for j in 1..=k1 { j1v += 1; fac += c[j1v-1] * q[it-1+(j-1)*m]; }
                     jj2 += 1;
                     term += (fac - x[jj2-1]).powi(2);
                     l0 += nest;
@@ -2415,7 +2418,7 @@ fn fpcons(
                         let (mut cos, mut sin) = (0.0, 0.0);
                         fpgivs(piv, &mut a[j_f - 1], &mut cos, &mut sin);
                         let mut j1 = j_f;
-                        for j2 in 1..=idim { fprota(cos, sin, &mut xi_loc[j2-1], &mut z[j1-1]); j1 += nest; }
+                        for j2 in 1..=idim { fprota(cos, sin, &mut xi_loc[j2-1], &mut z[j1-1]); j1 += n_us; }
                         if i == lj { break; }
                         let mut i2 = 0usize;
                         for i1 in (i+1)..=lj { i2 += 1; fprota(cos, sin, &mut h[i1-1], &mut a[j_f-1+i2*nest]); }
@@ -2433,7 +2436,7 @@ fn fpcons(
             for _j2 in 1..=idim {
                 let j3 = j1 + ib;
                 fpback(a, &z[j1-1..], nn as i32, k1 as i32, &mut c[j3-1..], nest as i32);
-                j1 += nest;
+                j1 += n_us;
             }
         }
         if iopt < 0 { break 'outer; }
@@ -2464,9 +2467,9 @@ fn fpcons(
             for j2 in 1..=idim {
                 let mut fac = 0.0f64;
                 let mut j1 = l0;
-                for j in 1..=k1 { j1 += 1; fac += c[j1-1+(j2-1)*nest] * q[it-1+(j-1)*m]; }
+                for j in 1..=k1 { j1 += 1; fac += c[j1-1] * q[it-1+(j-1)*m]; }
                 term += (w[it-1] * (fac - x[jj])).powi(2);
-                jj += 1; l0 += nest;
+                jj += 1; l0 += n_us;
             }
             fpart += term;
             if new_f != 0 { let store=term*half; fpint[ii-1]=fpart-store; ii+=1; fpart=store; new_f=0; }
@@ -2527,7 +2530,7 @@ fn fpcons(
                     let (mut cos, mut sin) = (0.0, 0.0);
                     fpgivs(piv, &mut g[j_f-1], &mut cos, &mut sin);
                     let mut j1 = j_f;
-                    for j2 in 1..=idim { fprota(cos, sin, &mut xi2[j2-1], &mut c[j1-1]); j1 += nest; }
+                    for j2 in 1..=idim { fprota(cos, sin, &mut xi2[j2-1], &mut c[j1-1]); j1 += n_us; }
                     if j_f == nn { break; }
                     let i2 = (nn - j_f).min(k1);
                     for i in 1..=i2 { fprota(cos, sin, &mut h[i], &mut g[j_f-1+i*nest]); h[i-1] = h[i]; }
@@ -2541,7 +2544,7 @@ fn fpcons(
                 let z_copy3: Vec<f64> = c[j1-1..j1-1+nn].to_vec();
                 fpback(g, &z_copy3, nn as i32, k2 as i32, &mut c[j3-1..], nest as i32);
                 if ib > 0 { for i in 0..ib { c[j1-1+i] = 0.0; } }
-                j1 += nest;
+                j1 += n_us;
             }
             *fp = 0.0;
             let mut ll = k2;
@@ -2551,8 +2554,8 @@ fn fpcons(
                 let mut l0 = ll - k2; let mut term = 0.0f64;
                 for j2 in 1..=idim {
                     let mut fac = 0.0f64; let mut j1v = l0;
-                    for j in 1..=k1 { j1v += 1; fac += c[j1v-1+(j2-1)*nest]*q[it-1+(j-1)*m]; }
-                    term += (fac - x[jj]).powi(2); jj += 1; l0 += nest;
+                    for j in 1..=k1 { j1v += 1; fac += c[j1v-1]*q[it-1+(j-1)*m]; }
+                    term += (fac - x[jj]).powi(2); jj += 1; l0 += n_us;
                 }
                 *fp += term * w[it-1].powi(2);
             }
@@ -3568,6 +3571,284 @@ mod tests {
         assert!(ier1 <= 0, "restart call failed: ier1={ier1}");
         assert!(fp1 <= fp0 + s * 0.01,
             "restart residual {fp1:.6e} is worse than fresh {fp0:.6e}");
+    }
+
+    // ── splev_ standalone ─────────────────────────────────────────────────────
+
+    #[test]
+    fn splev_constant_spline() {
+        // Constant cubic B-spline: t=[0,0,0,0,1,1,1,1], c=[3,...], K=3.
+        // A clamped cubic spline with all coefficients equal to 3
+        // evaluates to exactly 3 everywhere on [0,1].
+        let k = 3i32;
+        let n = 8i32;
+        let t = [0.0f64, 0.0, 0.0, 0.0, 1.0, 1.0, 1.0, 1.0];
+        let c = [3.0f64, 3.0, 3.0, 3.0, 0.0, 0.0, 0.0, 0.0];
+        let x = [0.0f64, 0.2, 0.4, 0.6, 0.8, 1.0];
+        let m = x.len() as i32;
+        let mut y = vec![0.0f64; x.len()];
+        let mut ier = 0i32;
+        unsafe {
+            splev_(t.as_ptr(), &n, c.as_ptr(), &k,
+                   x.as_ptr(), y.as_mut_ptr(), &m, &mut ier);
+        }
+        assert_eq!(ier, 0);
+        for (i, &yi) in y.iter().enumerate() {
+            assert!((yi - 3.0).abs() < 1e-14,
+                "splev at x[{i}]={}: expected 3.0, got {yi}", x[i]);
+        }
+    }
+
+    // ── splint_ ───────────────────────────────────────────────────────────────
+
+    #[test]
+    fn splint_constant_and_sin() {
+        // ── Case 1: constant cubic spline, integral = constant × width ───────
+        let k = 3i32;
+        let n = 8i32;
+        let t = [0.0f64, 0.0, 0.0, 0.0, 1.0, 1.0, 1.0, 1.0];
+        let c = [2.0f64, 2.0, 2.0, 2.0, 0.0, 0.0, 0.0, 0.0];
+        let mut wrk = vec![0.0f64; n as usize];
+
+        let int_full = unsafe {
+            splint_(t.as_ptr(), &n, c.as_ptr(), &k, &0.0f64, &1.0f64, wrk.as_mut_ptr())
+        };
+        assert!((int_full - 2.0).abs() < 1e-13,
+            "∫₀¹ 2 dx: expected 2.0, got {int_full:.15}");
+
+        let int_half = unsafe {
+            splint_(t.as_ptr(), &n, c.as_ptr(), &k, &0.25f64, &0.75f64, wrk.as_mut_ptr())
+        };
+        assert!((int_half - 1.0).abs() < 1e-13,
+            "∫₀.₂₅⁰·⁷⁵ 2 dx: expected 1.0, got {int_half:.15}");
+
+        // ── Case 2: interpolating sin on [0,π], ∫₀^π sin = 2 ────────────────
+        const M: usize = 9;
+        const K2: i32 = 3;
+        const NEST2: usize = M + K2 as usize + 1;
+        let lwrk2 = curfit_lwrk(M, K2 as usize, NEST2);
+        let x: Vec<f64> = (0..M).map(|i| i as f64 * PI / (M - 1) as f64).collect();
+        let y: Vec<f64> = x.iter().map(|&xi| xi.sin()).collect();
+        let w = vec![1.0f64; M];
+        let (m_i, k2, nest_i, lwrk_i) = (M as i32, K2, NEST2 as i32, lwrk2 as i32);
+        let mut n2 = 0i32;
+        let mut t2 = vec![0.0f64; NEST2];
+        let mut c2 = vec![0.0f64; NEST2];
+        let mut fp2 = 0.0f64;
+        let mut wrk2 = vec![0.0f64; lwrk2];
+        let mut iwrk2 = vec![0i32; NEST2];
+        let mut ier2 = 0i32;
+        unsafe {
+            curfit_(&0i32, &m_i, x.as_ptr(), y.as_ptr(), w.as_ptr(),
+                    &x[0], &x[M-1], &k2, &0.0f64, &nest_i,
+                    &mut n2, t2.as_mut_ptr(), c2.as_mut_ptr(), &mut fp2,
+                    wrk2.as_mut_ptr(), &lwrk_i, iwrk2.as_mut_ptr(), &mut ier2);
+        }
+        assert!(ier2 <= 0, "sin fit failed: ier={ier2}");
+        let mut wrk3 = vec![0.0f64; n2 as usize];
+        let int_sin = unsafe {
+            splint_(t2.as_ptr(), &n2, c2.as_ptr(), &k2, &x[0], &x[M-1], wrk3.as_mut_ptr())
+        };
+        assert!((int_sin - 2.0).abs() < 1e-3,
+            "∫₀^π sin: expected 2.0, got {int_sin:.12}");
+    }
+
+    // ── sproot_ ───────────────────────────────────────────────────────────────
+
+    #[test]
+    fn sproot_sin_zeros() {
+        // Fit an interpolating cubic spline to sin on [0, 2π].
+        // sproot_ should find zeros close to 0, π, and 2π.
+        const M: usize = 17;
+        const K: i32 = 3;
+        const NEST: usize = M + K as usize + 1;
+        let lwrk = curfit_lwrk(M, K as usize, NEST);
+        let x: Vec<f64> = (0..M).map(|i| i as f64 * 2.0 * PI / (M - 1) as f64).collect();
+        let y: Vec<f64> = x.iter().map(|&xi| xi.sin()).collect();
+        let w = vec![1.0f64; M];
+        let (m_i, k, nest_i, lwrk_i) = (M as i32, K, NEST as i32, lwrk as i32);
+        let mut n = 0i32;
+        let mut t = vec![0.0f64; NEST];
+        let mut c = vec![0.0f64; NEST];
+        let mut fp = 0.0f64;
+        let mut wrk = vec![0.0f64; lwrk];
+        let mut iwrk = vec![0i32; NEST];
+        let mut ier = 0i32;
+        unsafe {
+            curfit_(&0i32, &m_i, x.as_ptr(), y.as_ptr(), w.as_ptr(),
+                    &x[0], &x[M-1], &k, &0.0f64, &nest_i,
+                    &mut n, t.as_mut_ptr(), c.as_mut_ptr(), &mut fp,
+                    wrk.as_mut_ptr(), &lwrk_i, iwrk.as_mut_ptr(), &mut ier);
+        }
+        assert!(ier <= 0, "sin fit failed: ier={ier}");
+
+        let mest = 10i32;
+        let mut zeros = vec![0.0f64; mest as usize];
+        let mut m_found = 0i32;
+        let mut ier_r = 0i32;
+        unsafe {
+            sproot_(t.as_ptr(), &n, c.as_ptr(),
+                    zeros.as_mut_ptr(), &mest, &mut m_found, &mut ier_r);
+        }
+        assert_eq!(ier_r, 0, "sproot_ returned error {ier_r}");
+        assert!(m_found >= 1, "expected at least one zero, found {m_found}");
+
+        // At least one zero must be within 0.01 of π (the interior zero of sin on [0,2π])
+        let has_pi_zero = zeros[..m_found as usize].iter()
+            .any(|&z| (z - PI).abs() < 0.01);
+        assert!(has_pi_zero,
+            "no zero found near π; zeros = {:?}", &zeros[..m_found as usize]);
+    }
+
+    // ── insert_ ───────────────────────────────────────────────────────────────
+
+    #[test]
+    fn insert_preserves_curve() {
+        // Fit a smoothing spline, insert a knot, verify evaluation is unchanged.
+        const M: usize = 20;
+        const K: i32 = 3;
+        const NEST: usize = M + K as usize + 1;
+        let lwrk = curfit_lwrk(M, K as usize, NEST);
+        let x: Vec<f64> = (0..M).map(|i| i as f64 / (M - 1) as f64).collect();
+        let y: Vec<f64> = x.iter().map(|&xi| (2.0 * PI * xi).sin()).collect();
+        let w = vec![1.0f64; M];
+        let (m_i, k, nest_i, lwrk_i) = (M as i32, K, NEST as i32, lwrk as i32);
+        let mut n = 0i32;
+        let mut t = vec![0.0f64; NEST];
+        let mut c = vec![0.0f64; NEST];
+        let mut fp = 0.0f64;
+        let mut wrk = vec![0.0f64; lwrk];
+        let mut iwrk = vec![0i32; NEST];
+        let mut ier = 0i32;
+        unsafe {
+            curfit_(&0i32, &m_i, x.as_ptr(), y.as_ptr(), w.as_ptr(),
+                    &x[0], &x[M-1], &k, &0.02f64, &nest_i,
+                    &mut n, t.as_mut_ptr(), c.as_mut_ptr(), &mut fp,
+                    wrk.as_mut_ptr(), &lwrk_i, iwrk.as_mut_ptr(), &mut ier);
+        }
+        assert!(ier <= 0, "fit failed: ier={ier}");
+
+        // Evaluate before insertion
+        let x_eval: Vec<f64> = (0..10).map(|i| i as f64 / 9.0).collect();
+        let m_eval = x_eval.len() as i32;
+        let mut y_before = vec![0.0f64; x_eval.len()];
+        let mut ier_e = 0i32;
+        unsafe {
+            splev_(t.as_ptr(), &n, c.as_ptr(), &k,
+                   x_eval.as_ptr(), y_before.as_mut_ptr(), &m_eval, &mut ier_e);
+        }
+        assert_eq!(ier_e, 0);
+
+        // Insert a knot at x=0.37 (choose a value in the interior)
+        let nest2 = NEST as i32;
+        let mut tt = vec![0.0f64; NEST];
+        let mut nn = 0i32;
+        let mut cc = vec![0.0f64; NEST];
+        let x_new = 0.37f64;
+        let mut ier_i = 0i32;
+        unsafe {
+            insert_(&0i32, t.as_ptr(), &n, c.as_ptr(), &k,
+                    &x_new, tt.as_mut_ptr(), &mut nn, cc.as_mut_ptr(),
+                    &nest2, &mut ier_i);
+        }
+        assert_eq!(ier_i, 0, "insert_ failed: ier={ier_i}");
+        assert_eq!(nn, n + 1, "expected one extra knot after insertion");
+
+        // Evaluate after insertion — must match to machine precision
+        let mut y_after = vec![0.0f64; x_eval.len()];
+        unsafe {
+            splev_(tt.as_ptr(), &nn, cc.as_ptr(), &k,
+                   x_eval.as_ptr(), y_after.as_mut_ptr(), &m_eval, &mut ier_e);
+        }
+        assert_eq!(ier_e, 0);
+        for (i, (&before, &after)) in y_before.iter().zip(y_after.iter()).enumerate() {
+            assert!((before - after).abs() < 1e-13,
+                "insert changed evaluation at x[{i}]={:.4}: {before} → {after}",
+                x_eval[i]);
+        }
+    }
+
+    // ── concur_ ───────────────────────────────────────────────────────────────
+
+    #[test]
+    fn concur_unit_circle_interpolation() {
+        // Fit a cubic parametric spline to 9 points on a 3/4-circle arc,
+        // parameterized by angle in [0, 3π/2], then verify curev_ evaluations
+        // lie on the unit circle to within 1e-6.
+        const M: usize = 9;
+        const K: i32 = 3;
+        const IDIM: usize = 2;
+        let k1 = (K + 1) as usize;
+        let nest = M + k1 + 2 * (k1 - 2); // = m + k + 1 + 2*(k-1)
+        let nc = nest * IDIM;
+        let np = 2 * k1 * IDIM;
+        let lwrk = M * k1 + nest * (6 + IDIM + 3 * K as usize);
+        let mx = M * IDIM;
+
+        // Use a 3/4-circle arc so endpoints are distinct (avoids degenerate open-curve fit)
+        let u: Vec<f64> = (0..M).map(|i| i as f64 * 1.5 * PI / (M - 1) as f64).collect();
+        // interleaved [x0,y0, x1,y1, ...]
+        let xn: Vec<f64> = u.iter().flat_map(|&ui| [ui.cos(), ui.sin()]).collect();
+        let w = vec![1.0f64; M];
+
+        // Use a moderate smoothing factor: s = M * rms² with rms=0.01 per point.
+        // This keeps the algorithm in the knot-refinement regime (no regularization),
+        // while still giving a tight fit that should stay on the unit circle.
+        let s_val = M as f64 * 1e-4f64; // rms ≈ 0.01 per point
+        let (iopt, idim, m_i, mx_i, ib, ie, k, s, nest_i, nc_i, np_i, lwrk_i) =
+            (0i32, IDIM as i32, M as i32, mx as i32,
+             0i32, 0i32, K, s_val,
+             nest as i32, nc as i32, np as i32, lwrk as i32);
+
+        let mut n = 0i32;
+        let mut t = vec![0.0f64; nest];
+        let mut c = vec![0.0f64; nc];
+        let mut cp = vec![0.0f64; np];
+        let mut xx = vec![0.0f64; mx];
+        let mut fp = 0.0f64;
+        let mut wrk = vec![0.0f64; lwrk];
+        let mut iwrk = vec![0i32; nest];
+        let mut ier = 0i32;
+        let db = vec![0.0f64; 1]; // unused (ib=0)
+        let de = vec![0.0f64; 1]; // unused (ie=0)
+        let (nb, ne) = (0i32, 0i32);
+
+        unsafe {
+            concur_(
+                &iopt, &idim, &m_i,
+                u.as_ptr(), &mx_i, xn.as_ptr(), xx.as_mut_ptr(), w.as_ptr(),
+                &ib, db.as_ptr(), &nb,
+                &ie, de.as_ptr(), &ne,
+                &k, &s, &nest_i, &mut n,
+                t.as_mut_ptr(), &nc_i, c.as_mut_ptr(),
+                &np_i, cp.as_mut_ptr(),
+                &mut fp, wrk.as_mut_ptr(), &lwrk_i, iwrk.as_mut_ptr(), &mut ier,
+            );
+        }
+        assert!(ier <= 0, "concur_ failed: ier={ier}");
+
+        // Evaluate on a 50-point dense grid over the same arc and verify radius ≈ 1
+        let u_dense: Vec<f64> = (0..50).map(|i| i as f64 * 1.5 * PI / 49.0).collect();
+        let m_dense = u_dense.len() as i32;
+        let mxy = m_dense * idim;
+        let mut xy = vec![0.0f64; mxy as usize];
+        let nc_eval = n * idim;
+        let mut ier_e = 0i32;
+        unsafe {
+            curev_(
+                &idim, t.as_ptr(), &n, c.as_ptr(), &nc_eval,
+                &k, u_dense.as_ptr(), &m_dense,
+                xy.as_mut_ptr(), &mxy, &mut ier_e,
+            );
+        }
+        assert_eq!(ier_e, 0, "curev_ failed: ier={ier_e}");
+        for i in 0..50 {
+            let cx = xy[2 * i];
+            let cy = xy[2 * i + 1];
+            let r = (cx * cx + cy * cy).sqrt();
+            assert!((r - 1.0).abs() < 0.05,
+                "point {i}: radius = {r:.8}, expected 1.0 (cx={cx:.6}, cy={cy:.6})");
+        }
     }
 
 }
