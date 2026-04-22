@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: Apache-2.0 OR MIT
+// Copyright (c) 2021-2026, Harbers Bik LLC
+
 use super::Result;
 use csv::ReaderBuilder;
 use serde::Serialize;

@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: Apache-2.0 OR MIT
+// Copyright (c) 2021-2026, Harbers Bik LLC
+
 //! # splinefit: B-Spline Curve and Surface Fitting
 //!
 //! A pure-Rust B-spline fitting library with an ergonomic high-level API, backed by a
@@ -89,9 +92,6 @@
 //! Unless you explicitly state otherwise, any contribution intentionally submitted
 //! for inclusion in the work by you, as defined in the Apache-2.0 license, shall be
 //! dual licensed as above, without any additional terms or conditions.
-
-// Copyright 2021–2026, Harbers Bik LLC
-// Licensed under Apache-2.0 OR MIT (see LICENSE-APACHE / LICENSE-MIT).
 
 // Private backend: pure-Rust translation of the Dierckx Fortran library.
 mod dierckx;

@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: Apache-2.0 OR MIT
+// Copyright (c) 2021-2026, Harbers Bik LLC
+
 //! Builder for fitting a closed (periodic) parametric B-spline curve through multi-dimensional data.
 
 use super::FitError;

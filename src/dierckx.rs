@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: Apache-2.0 OR MIT
+// Copyright (c) 2021-2026, Harbers Bik LLC
+
 // Pure Rust translation of the Dierckx Fortran B-spline library.
 // All Fortran `real` compiled with -fdefault-real-8 → f64.
 // All Fortran `integer` → i32 (or usize for indexing).

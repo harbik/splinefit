@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: Apache-2.0 OR MIT
+// Copyright (c) 2021-2026, Harbers Bik LLC
+
 use super::{FitError, Result};
 use spliny::SplineCurve;
 use crate::dierckx::{splev_, curev_};
