@@ -105,6 +105,27 @@ a high-level wrapper. Keep them; they will be needed when surface/Fourier fittin
 
 Run all tests: `cargo test`
 
+## Pull requests vs. direct commits
+
+**Default: push directly to `main`** for routine changes — bug fixes, new tests,
+documentation updates, dependency bumps, and small self-contained features.
+
+**Open a PR instead** when the change meets any of these criteria:
+
+- **Public API change** — adding, removing, or modifying a type, method signature, or
+  type alias that users depend on.  A PR surfaces the diff as a whole and signals an
+  upcoming minor or major version bump.
+- **Non-trivial edit to `dierckx.rs`** — any change to the numeric algorithms (not just
+  adding a test or fixing an index bug with an obvious correct value).  The translation
+  is subtle enough that a deliberate review step is worth the overhead.
+- **New high-level fit type** — spans multiple files (`dierckx.rs`, a new module,
+  `lib.rs` re-exports) and benefits from seeing the full picture before it lands.
+- **A future external contributor** sends a patch — always via PR.
+
+When committing a change that meets one of the above criteria, flag it:
+> "This change touches the public API / numeric core — consider opening a PR rather
+> than committing directly to main."
+
 ## Release checklist
 
 When cutting a new release (patch, minor, or major):
