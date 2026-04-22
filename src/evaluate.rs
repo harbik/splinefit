@@ -53,16 +53,27 @@ fn curev<const K: usize, const N: usize>(s: &SplineCurve<K,N>, u: &[f64]) -> (i3
     let m = u.len() as i32;
     let mxy = m * idim;
     let mut xy = vec![0.0; mxy as usize];
-    let n = s.t.len() as i32;
-    let nc = s.c.len() as i32;
+    let n = s.t.len();
+    let n_i32 = n as i32;
+    let nk1 = n - K - 1;
+    // curev_ uses stride n per dimension; SplineCurve stores only nk1 coefficients
+    // per dimension (the k+1 trailing zeros are stripped by the From conversion).
+    // Reconstruct the full n*N array with k+1 trailing zeros per dimension.
+    let nc = n * N;
+    let mut c_padded = vec![0.0f64; nc];
+    for dim in 0..N {
+        c_padded[dim * n .. dim * n + nk1]
+            .copy_from_slice(&s.c[dim * nk1 .. (dim + 1) * nk1]);
+    }
+    let nc_i32 = nc as i32;
     let mut ierr = 0;
     unsafe {
         curev_(
             &idim,
             s.t.as_ptr(),
-            &n,
-            s.c.as_ptr(),
-            &nc,
+            &n_i32,
+            c_padded.as_ptr(),
+            &nc_i32,
             &k,
             u.as_ptr(),
             &m,

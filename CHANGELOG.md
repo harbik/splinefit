@@ -7,6 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **`ops` module** — new public module with three free functions mirroring SciPy's FITPACK
+  interface:
+  - `ops::integral(s, a, b)` — definite integral of a 1-D spline over `[a, b]` via `splint_`
+  - `ops::roots(s)` — all zeros of a cubic 1-D spline via `sproot_`; returns interior zeros
+    in ascending order
+  - `ops::insert_knot(s, x)` — insert a knot at `x` via `insert_`, returning a new
+    `SplineCurve` that evaluates identically; works for any degree `K` and dimension `N`
+
+### Fixed
+
+- **`evaluate::curev`** — the `N > 1` evaluation path passed `nc = N * nk1` to `curev_`,
+  but `curev_` requires stride `n` per dimension (`nc = N * n`, last `k+1` entries per
+  dimension are zero).  The function now reconstructs a padded `N × n` coefficient array
+  before calling `curev_`.  Previously, any parametric-curve evaluation silently read from
+  uninitialised memory beyond the coefficient slice.
+
 ## [0.1.1] - 2026-04-22
 
 ### Fixed
