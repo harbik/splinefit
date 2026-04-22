@@ -77,7 +77,7 @@
 //! downloaded from [netlib.org](http://www.netlib.org/dierckx/) and carry no license
 //! restrictions. Please acknowledge Paul Dierckx' work in your projects.
 //!
-//! All Rust source in this repository is &copy; 2021 Harbers Bik LLC, dual-licensed under:
+//! All Rust source in this repository is &copy; 2021–2026 Harbers Bik LLC, dual-licensed under:
 //!
 //! * Apache License, Version 2.0 ([LICENSE-APACHE](LICENSE-APACHE))
 //! * MIT license ([LICENSE-MIT](LICENSE-MIT))
@@ -90,7 +90,7 @@
 //! for inclusion in the work by you, as defined in the Apache-2.0 license, shall be
 //! dual licensed as above, without any additional terms or conditions.
 
-// Copyright 2021, Harbers Bik LLC
+// Copyright 2021–2026, Harbers Bik LLC
 // Licensed under Apache-2.0 OR MIT (see LICENSE-APACHE / LICENSE-MIT).
 
 // Private backend: pure-Rust translation of the Dierckx Fortran library.

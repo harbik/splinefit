@@ -79,7 +79,7 @@ The original Dierckx Fortran algorithms (on which this translation is based) wer
 downloaded from [netlib.org](http://www.netlib.org/dierckx/) and carry no license
 restrictions. Please acknowledge Paul Dierckx' work in your projects.
 
-All Rust source in this repository is &copy; 2021 Harbers Bik LLC, dual-licensed under:
+All Rust source in this repository is &copy; 2021–2026 Harbers Bik LLC, dual-licensed under:
 
 * Apache License, Version 2.0 ([LICENSE-APACHE](LICENSE-APACHE))
 * MIT license ([LICENSE-MIT](LICENSE-MIT))
