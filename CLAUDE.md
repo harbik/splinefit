@@ -110,8 +110,10 @@ Run all tests: `cargo test`
 When cutting a new release (patch, minor, or major):
 
 1. Bump the version in `Cargo.toml`.
-2. Update the version string in the `README.md` installation snippet
-   (the `splinefit = "x.y.z"` line in the `[dependencies]` example).
+2. Update the version string in the `src/lib.rs` doc-comment installation snippet
+   (the `//! splinefit = "x.y.z"` line).  Then run `cargo rdme --force` to regenerate
+   `README.md` from the doc comments — do **not** edit `README.md` directly, as it will
+   be overwritten the next time `cargo rdme` is run.
 3. In `CHANGELOG.md`:
    - Rename `[Unreleased]` to the new version with today's date.
    - Add a blank `## [Unreleased]` section above it.
