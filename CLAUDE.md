@@ -163,15 +163,22 @@ The npm package name is `splinefit`.
    wasm-pack build --target web --features wasm --scope splinefit
    ```
 
-3. Review the generated `pkg/package.json` — verify `name` is `splinefit`,
+3. Copy the JavaScript-focused README into the package (wasm-pack copies the
+   Rust-oriented `README.md` by default):
+
+   ```sh
+   cp wasm/README.md pkg/README.md
+   ```
+
+4. Review the generated `pkg/package.json` — verify `name` is `splinefit`,
    `version` matches the crate, and `files` includes the `.wasm` and `.js` files.
-4. Test locally (optional):
+5. Test locally (optional):
 
    ```sh
    cd pkg && npm pack && cd ..
    ```
 
-5. Publish to npm:
+6. Publish to npm:
 
    ```sh
    wasm-pack publish --target web --features wasm
