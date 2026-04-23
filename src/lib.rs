@@ -146,6 +146,9 @@ pub mod ops;
 pub mod util;
 pub use util::*;
 
+#[cfg(feature = "wasm")]
+pub mod wasm;
+
 use std::error;
 use std::fmt;
 
