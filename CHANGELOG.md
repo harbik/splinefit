@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-04-23
+
+### Added
+
+- **`wasm` feature** — WebAssembly bindings via `wasm-bindgen`.  Enables a `CubicSpline`
+  class usable from JavaScript / TypeScript with `smoothing`, `interpolating`, and
+  `cardinal` constructors, plus `evaluate`, `integral`, `roots`, `knots`, `coefficients`,
+  and `num_knots` methods.  Build with `wasm-pack build --target web --features wasm`.
+- **Benchmarks** — `cargo bench` runs criterion benchmarks for 1-D and 2-D fit and
+  evaluation at various data sizes.  `benches/scipy_bench.py` provides the matching
+  SciPy/Fortran reference.  Results documented in the crate-level docs.
+- **npm README** — `wasm/README.md` provides JavaScript-focused API documentation,
+  installation instructions (npm and esm.sh CDN), and usage examples for npm consumers.
+
 ## [0.2.0] - 2026-04-23
 
 ### Added
@@ -110,7 +124,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `xtask` with `cargo xtask test` and `cargo xtask doc` commands.
 - Numerical correctness verified against SciPy reference values.
 
-[Unreleased]: https://github.com/harbik/splinefit/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/harbik/splinefit/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/harbik/splinefit/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/harbik/splinefit/compare/v0.1.1...v0.2.0
 [0.1.1]: https://github.com/harbik/splinefit/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/harbik/splinefit/releases/tag/v0.1.0
