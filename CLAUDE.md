@@ -136,6 +136,8 @@ When cutting a new release (patch, minor, or major):
    `README.md` from the doc comments — do **not** edit `README.md` directly, as it will
    be overwritten the next time `cargo rdme` is run.
 3. In `CHANGELOG.md`:
+   - Review `git log vPREV...HEAD` and make sure every user-visible change since the
+     last release is documented under `[Unreleased]` (Added / Changed / Fixed / Tests).
    - Rename `[Unreleased]` to the new version with today's date.
    - Add a blank `## [Unreleased]` section above it.
    - Add the comparison link at the bottom:
