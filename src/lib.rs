@@ -23,7 +23,7 @@
 //!
 //! ```toml
 //! [dependencies]
-//! splinefit = "0.3.0"
+//! splinefit = "0.4.0"
 //! ```
 //!
 //! ## Example

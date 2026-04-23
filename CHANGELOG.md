@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-04-23
+
+### Added
+
+- **`python` feature** — Python bindings via PyO3 and maturin.  Exposes a `CubicSpline`
+  class with `smoothing`, `interpolating`, and `cardinal` constructors, plus `evaluate`,
+  `integral`, `roots`, `knots`, `coefficients`, and `num_knots`.  All inputs/outputs use
+  NumPy arrays.  Build with `maturin develop --features python`.
+- **Type stubs** (`splinefit.pyi`) — full type annotations for editor autocompletion and
+  type checking, bundled into the wheel by maturin.
+- **PyPI README** (`python/README.md`) — Python-focused API documentation with install
+  instructions, usage examples, and a SciPy comparison table.
+- **`pyproject.toml`** — maturin build configuration for the Python package.
+
 ## [0.3.0] - 2026-04-23
 
 ### Added
@@ -124,7 +138,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `xtask` with `cargo xtask test` and `cargo xtask doc` commands.
 - Numerical correctness verified against SciPy reference values.
 
-[Unreleased]: https://github.com/harbik/splinefit/compare/v0.3.0...HEAD
+[Unreleased]: https://github.com/harbik/splinefit/compare/v0.4.0...HEAD
+[0.4.0]: https://github.com/harbik/splinefit/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/harbik/splinefit/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/harbik/splinefit/compare/v0.1.1...v0.2.0
 [0.1.1]: https://github.com/harbik/splinefit/compare/v0.1.0...v0.1.1
