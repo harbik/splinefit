@@ -34,8 +34,12 @@ use spliny::SplineCurve;
 pub fn integral<const K: usize>(s: &SplineCurve<K, 1>, a: f64, b: f64) -> f64 {
     let n = s.t.len() as i32;
     let k = K as i32;
+    // SplineCurve stores only nk1 = n - k - 1 coefficients; splint_ indexes into
+    // c[0..n-1], so pad the stored coefficients with k+1 trailing zeros.
+    let mut c_full = vec![0.0f64; s.t.len()];
+    c_full[..s.c.len()].copy_from_slice(&s.c);
     let mut wrk = vec![0.0f64; s.t.len()];
-    unsafe { splint_(s.t.as_ptr(), &n, s.c.as_ptr(), &k, &a, &b, wrk.as_mut_ptr()) }
+    unsafe { splint_(s.t.as_ptr(), &n, c_full.as_ptr(), &k, &a, &b, wrk.as_mut_ptr()) }
 }
 
 /// Find all zeros of a cubic 1-D spline within its domain, returned in ascending order.
@@ -59,16 +63,19 @@ pub fn integral<const K: usize>(s: &SplineCurve<K, 1>, a: f64, b: f64) -> f64 {
 /// ```
 pub fn roots(s: &SplineCurve<3, 1>) -> Result<Vec<f64>> {
     let n = s.t.len() as i32;
-    let _k = 3i32;
     let mest = n; // safe upper bound on number of roots
     let mut zeros = vec![0.0f64; n as usize];
     let mut m = 0i32;
     let mut ier = 0i32;
+    // SplineCurve<3,1> stores only nk1 = n - 4 coefficients; sproot_ indexes into
+    // c[0..n-1], so pad the stored coefficients with k+1 = 4 trailing zeros.
+    let mut c_full = vec![0.0f64; n as usize];
+    c_full[..s.c.len()].copy_from_slice(&s.c);
     unsafe {
         sproot_(
             s.t.as_ptr(),
             &n,
-            s.c.as_ptr(),
+            c_full.as_ptr(),
             zeros.as_mut_ptr(),
             &mest,
             &mut m,
