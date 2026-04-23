@@ -1,5 +1,10 @@
 #!/usr/bin/env python3
-"""Compare cardinal splines at different knot spacings on data with a sharp feature."""
+"""Compare cardinal splines at different knot spacings on data with a sharp feature.
+
+Setup (run once):
+    python3 -m venv .venv && source .venv/bin/activate
+    pip install splinefit numpy
+"""
 
 import numpy as np
 from splinefit import CubicSpline

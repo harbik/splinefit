@@ -1,5 +1,10 @@
 #!/usr/bin/env python3
-"""Fit a smoothing spline to noisy sin(x) data and compare with the true function."""
+"""Fit a smoothing spline to noisy sin(x) data and compare with the true function.
+
+Setup (run once):
+    python3 -m venv .venv && source .venv/bin/activate
+    pip install splinefit numpy
+"""
 
 import numpy as np
 from splinefit import CubicSpline

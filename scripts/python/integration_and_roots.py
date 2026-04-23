@@ -1,5 +1,10 @@
 #!/usr/bin/env python3
-"""Demonstrate integration and root-finding on a spline."""
+"""Demonstrate integration and root-finding on a spline.
+
+Setup (run once):
+    python3 -m venv .venv && source .venv/bin/activate
+    pip install splinefit numpy
+"""
 
 import numpy as np
 from splinefit import CubicSpline
