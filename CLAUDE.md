@@ -200,7 +200,7 @@ feature flag.  The PyPI package name is `splinefit`.
 
    ```sh
    python3 -m venv .venv && source .venv/bin/activate
-   pip install maturin numpy
+   pip install maturin numpy twine
    maturin develop --features python
    python3 -c "from splinefit import CubicSpline; print('OK')"
    ```
@@ -211,10 +211,11 @@ feature flag.  The PyPI package name is `splinefit`.
    maturin build --release --features python
    ```
 
-5. Publish to PyPI:
+5. Publish to PyPI with `twine` (requires `TWINE_PASSWORD` or `--password`
+   with a PyPI API token):
 
    ```sh
-   maturin publish --features python
+   twine upload target/wheels/splinefit-*.whl
    ```
 
 ## Adding a new high-level fit type
