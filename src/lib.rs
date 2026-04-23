@@ -74,6 +74,39 @@
 //! translation of the Fortran engine, so it builds anywhere Rust builds with no external
 //! toolchain dependencies.
 //!
+//! ## Performance
+//!
+//! The pure-Rust engine matches or outperforms SciPy's Fortran-compiled FITPACK.
+//! Benchmarks on Apple M1 (macOS), fitting and evaluating `sin(x)` on `[0, 2π]`:
+//!
+//! **1-D smoothing fit**
+//!
+//! | Data points | Rust | SciPy/Fortran |
+//! |---:|---:|---:|
+//! | 50 | 17 µs | 21 µs |
+//! | 200 | 57 µs | 62 µs |
+//! | 1 000 | 279 µs | 282 µs |
+//! | 5 000 | 1.35 ms | 1.4 ms |
+//!
+//! **1-D evaluation (10× data points)**
+//!
+//! | Data points | Rust | SciPy/Fortran |
+//! |---:|---:|---:|
+//! | 50 | 12 µs | 18 µs |
+//! | 200 | 50 µs | 61 µs |
+//! | 1 000 | 254 µs | 307 µs |
+//! | 5 000 | 1.27 ms | 1.5 ms |
+//!
+//! **2-D parametric evaluation (10× data points)**
+//!
+//! | Data points | Rust | SciPy/Fortran |
+//! |---:|---:|---:|
+//! | 50 | 12 µs | 34 µs |
+//! | 200 | 50 µs | 121 µs |
+//! | 1 000 | 248 µs | 611 µs |
+//!
+//! Reproduce with `cargo bench` (Rust) and `python3 benches/scipy_bench.py` (SciPy).
+//!
 //! ## License
 //!
 //! The original Dierckx Fortran algorithms (on which this translation is based) were

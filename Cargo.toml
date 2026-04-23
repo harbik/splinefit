@@ -26,6 +26,11 @@ default = []
 plot = ["dep:plotters"]
 
 [dev-dependencies]
+criterion = { version = "0.5", features = ["html_reports"] }
+
+[[bench]]
+name = "spline_bench"
+harness = false
 
 # README.md is generated from the //! doc-comments in src/lib.rs.
 # Install: cargo install cargo-rdme
