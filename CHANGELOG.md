@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-04-23
+
 ### Added
 
 - **`ops` module** — new public module with three free functions mirroring SciPy's FITPACK
@@ -24,6 +26,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   dimension are zero).  The function now reconstructs a padded `N × n` coefficient array
   before calling `curev_`.  Previously, any parametric-curve evaluation silently read from
   uninitialised memory beyond the coefficient slice.
+- **`ops::integral` and `ops::roots`** — both `splint_` and `sproot_` index into
+  `c[0..n-1]` internally, but `SplineCurve` stores only `nk1 = n - k - 1` coefficients
+  (the `From` conversion strips trailing zeros).  Each function now pads a temporary
+  length-`n` coefficient array before the unsafe call, eliminating undefined behaviour.
 
 ## [0.1.1] - 2026-04-22
 
@@ -104,6 +110,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `xtask` with `cargo xtask test` and `cargo xtask doc` commands.
 - Numerical correctness verified against SciPy reference values.
 
-[Unreleased]: https://github.com/harbik/splinefit/compare/v0.1.1...HEAD
+[Unreleased]: https://github.com/harbik/splinefit/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/harbik/splinefit/compare/v0.1.1...v0.2.0
 [0.1.1]: https://github.com/harbik/splinefit/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/harbik/splinefit/releases/tag/v0.1.0

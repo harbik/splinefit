@@ -22,7 +22,7 @@ Add this to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-splinefit = "0.1.1"
+splinefit = "0.2.0"
 ```
 
 ## Example
