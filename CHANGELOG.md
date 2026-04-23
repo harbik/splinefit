@@ -7,6 +7,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.1] - 2026-04-23
+
+### Fixed
+
+- **`cardinal_spline` (all builders)** — `fpcurf` skipped the weighted least-squares
+  solve when `iopt = -1` (user-supplied knots), because the LS fitting code was nested
+  inside an `if iopt >= 0` block.  All coefficients came back as zero, making
+  `cardinal_spline` silently return a flat-zero curve.  Added a dedicated `iopt < 0`
+  code path that performs the Givens-rotation LS fit and back-substitution in a single
+  pass.  Verified against `scipy.interpolate.LSQUnivariateSpline` to 1e-6.
+
+### Added
+
+- **Python example scripts** (`scripts/python/`) — three scripts demonstrating
+  smoothing splines, integration/root-finding, and cardinal splines, with setup
+  instructions for PyPI install.
+- `curfit_iopt_minus1_cardinal` — scipy-reference unit test for `curfit_` with
+  user-supplied knots.
+- `cardinal_spline_sin` — integration test validating the high-level cardinal spline
+  API with fine and coarse knot spacings.
+
 ## [0.4.0] - 2026-04-23
 
 ### Added
@@ -138,7 +159,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `xtask` with `cargo xtask test` and `cargo xtask doc` commands.
 - Numerical correctness verified against SciPy reference values.
 
-[Unreleased]: https://github.com/harbik/splinefit/compare/v0.4.0...HEAD
+[Unreleased]: https://github.com/harbik/splinefit/compare/v0.4.1...HEAD
+[0.4.1]: https://github.com/harbik/splinefit/compare/v0.4.0...v0.4.1
 [0.4.0]: https://github.com/harbik/splinefit/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/harbik/splinefit/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/harbik/splinefit/compare/v0.1.1...v0.2.0

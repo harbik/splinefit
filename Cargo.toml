@@ -3,7 +3,7 @@ members = ["xtask"]
 
 [package]
 name = "splinefit"
-version = "0.4.0"
+version = "0.4.1"
 edition = "2021"
 description = "B-spline curve and surface fitting — pure-Rust Dierckx engine with ergonomic API"
 authors = ["Gerard Harbers", "Harbers Bik LLC"]
