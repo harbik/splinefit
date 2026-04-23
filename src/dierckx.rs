@@ -3624,17 +3624,20 @@ mod tests {
         let y: Vec<f64> = x.iter().map(|&xi| xi.sin()).collect();
         let w = vec![1.0f64; M];
 
-        // Knot vector: 4× boundary + 9 interior + 4× boundary = 17 knots
-        let mut t = vec![0.0f64; 17];
-        for i in 0..4 { t[i] = 0.0; t[16 - i] = 10.0; }
-        for i in 0..9 { t[4 + i] = (i + 1) as f64; }
-        let mut n = 17i32;
-        let nest = 17i32;
-        let mut c = vec![0.0f64; 17];
+        // Knot vector: (K+1)× boundary + interior + (K+1)× boundary
+        let k1 = K as usize + 1;
+        let n_interior = 9;
+        let knot_count = 2 * k1 + n_interior;
+        let mut t = vec![0.0f64; knot_count];
+        for i in 0..k1 { t[i] = 0.0; t[knot_count - 1 - i] = 10.0; }
+        for i in 0..n_interior { t[k1 + i] = (i + 1) as f64; }
+        let nest = knot_count as i32;
+        let mut n = nest;
+        let mut c = vec![0.0f64; knot_count];
         let mut fp = 0.0f64;
-        let lwrk = M * 4 + 17 * (7 + 9);
+        let lwrk = curfit_lwrk(M, K as usize, knot_count);
         let mut wrk = vec![0.0f64; lwrk];
-        let mut iwrk = vec![0i32; 17];
+        let mut iwrk = vec![0i32; knot_count];
         let mut ier = 0i32;
         let iopt = -1i32;
 
