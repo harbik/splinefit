@@ -1,0 +1,27 @@
+#!/usr/bin/env python3
+"""Compare smoothing splines at different RMS targets on data with a sharp feature."""
+
+import numpy as np
+from splinefit import CubicSpline
+
+# A function with a sharp feature: Gaussian bump on a sine wave
+x = np.linspace(0, 10, 200)
+y = np.sin(x) + 2 * np.exp(-((x - 5) ** 2) / 0.2)
+
+print("Smoothing spline fits with varying RMS target:")
+print(f"{'rms':>8}  {'knots':>6}  {'max error':>10}  {'rms error':>10}")
+print("-" * 42)
+
+for rms in [1.0, 0.5, 0.1, 0.05, 0.01]:
+    spline = CubicSpline.smoothing(x, y, rms=rms)
+    y_fit = spline.evaluate(x)
+    errors = np.abs(y - y_fit)
+    print(f"{rms:8.2f}  {spline.num_knots:6d}  {errors.max():10.6f}  {np.sqrt(np.mean(errors**2)):10.6f}")
+
+# Interpolating spline captures the peak exactly
+spline_exact = CubicSpline.interpolating(x, y)
+y_fit = spline_exact.evaluate(x)
+peak_idx = np.argmax(y)
+print(f"\nInterpolating ({spline_exact.num_knots} knots):")
+print(f"  Peak at x={x[peak_idx]:.1f}: true={y[peak_idx]:.6f}, fit={y_fit[peak_idx]:.6f}")
+print(f"  Max residual: {np.max(np.abs(y - y_fit)):.2e}")
