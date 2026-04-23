@@ -14,16 +14,21 @@ keywords = ["spline", "interpolation", "curve", "smoothing", "fitting"]
 categories = ["science", "mathematics", "algorithms"]
 license = "MIT OR Apache-2.0"
 
+[lib]
+crate-type = ["cdylib", "rlib"]
+
 [dependencies]
 spliny = "0.3"
 csv = "1.1"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 plotters = { version = "0.3", optional = true }
+wasm-bindgen = { version = "0.2", optional = true }
 
 [features]
 default = []
 plot = ["dep:plotters"]
+wasm = ["dep:wasm-bindgen"]
 
 [dev-dependencies]
 criterion = { version = "0.5", features = ["html_reports"] }

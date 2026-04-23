@@ -150,6 +150,40 @@ When cutting a new release (patch, minor, or major):
 8. Push commits and tag: `git push && git push origin vx.y.z`.
 9. Publish: `cargo publish`.
 
+## npm / wasm-pack publish checklist
+
+The crate compiles to WebAssembly via `wasm-pack` behind the `wasm` feature flag.
+The npm package name is `splinefit`.
+
+1. Make sure the crate release checklist (above) is done first — the npm package
+   version should match the crate version.
+2. Build the wasm package:
+
+   ```sh
+   wasm-pack build --target web --features wasm
+   ```
+
+3. Copy the JavaScript-focused README into the package (wasm-pack copies the
+   Rust-oriented `README.md` by default):
+
+   ```sh
+   cp wasm/README.md pkg/README.md
+   ```
+
+4. Review the generated `pkg/package.json` — verify `name` is `splinefit`,
+   `version` matches the crate, and `files` includes the `.wasm` and `.js` files.
+5. Test locally (optional):
+
+   ```sh
+   cd pkg && npm pack && cd ..
+   ```
+
+6. Publish to npm:
+
+   ```sh
+   wasm-pack publish --target web --features wasm
+   ```
+
 ## Adding a new high-level fit type
 
 1. Identify which low-level function in `dierckx.rs` implements it (e.g. `percur_` for

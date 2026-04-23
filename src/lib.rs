@@ -107,6 +107,31 @@
 //!
 //! Reproduce with `cargo bench` (Rust) and `python3 benches/scipy_bench.py` (SciPy).
 //!
+//! ## WebAssembly / JavaScript
+//!
+//! This crate compiles to WebAssembly via [`wasm-pack`](https://rustwasm.github.io/wasm-pack/).
+//! Enable the `wasm` feature to expose a `CubicSpline` class to JavaScript.
+//!
+//! ```html
+//! <script type="module">
+//!   import init, { CubicSpline } from "https://esm.sh/splinefit";
+//!   await init();
+//!
+//!   // Fit a smoothing spline to sin(x)
+//!   const x = Float64Array.from({ length: 50 }, (_, i) => i * 2 * Math.PI / 49);
+//!   const y = x.map(Math.sin);
+//!   const spline = CubicSpline.smoothing(x, y, 0.05);
+//!
+//!   // Evaluate at 200 points
+//!   const xNew = Float64Array.from({ length: 200 }, (_, i) => i * 2 * Math.PI / 199);
+//!   const yFit = spline.evaluate(xNew);
+//!
+//!   // Integration and root-finding
+//!   const area = spline.integral(0, Math.PI);  // ∫₀^π sin(x) dx ≈ 2
+//!   const zeros = spline.roots();               // interior zeros
+//! </script>
+//! ```
+//!
 //! ## License
 //!
 //! The original Dierckx Fortran algorithms (on which this translation is based) were
@@ -145,6 +170,9 @@ pub mod ops;
 
 pub mod util;
 pub use util::*;
+
+#[cfg(feature = "wasm")]
+pub mod wasm;
 
 use std::error;
 use std::fmt;
