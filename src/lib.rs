@@ -108,6 +108,8 @@ pub use clocur::*;
 
 pub mod evaluate;
 
+pub mod ops;
+
 pub mod util;
 pub use util::*;
 
