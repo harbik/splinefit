@@ -186,6 +186,34 @@ too similar to an existing `spline-fit` package).
    wasm-pack publish --target web --features wasm
    ```
 
+## Python / maturin publish checklist
+
+The crate compiles to a native Python extension via `maturin` behind the `python`
+feature flag.  The PyPI package name is `splinefit`.
+
+1. Make sure the crate release checklist (above) is done first — the PyPI package
+   version is derived from `Cargo.toml`.
+2. Build and test locally in a virtual environment:
+
+   ```sh
+   python3 -m venv .venv && source .venv/bin/activate
+   pip install maturin numpy
+   maturin develop --features python
+   python3 -c "from splinefit import CubicSpline; print('OK')"
+   ```
+
+3. Build a release wheel:
+
+   ```sh
+   maturin build --release --features python
+   ```
+
+4. Publish to PyPI:
+
+   ```sh
+   maturin publish --features python
+   ```
+
 ## Adding a new high-level fit type
 
 1. Identify which low-level function in `dierckx.rs` implements it (e.g. `percur_` for
