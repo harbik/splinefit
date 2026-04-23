@@ -7,14 +7,14 @@ Built from a pure-Rust translation of the classic [Dierckx FITPACK](http://www.n
 ## Installation
 
 ```sh
-npm install splinefit
+npm install @harbik/splinefit
 ```
 
 Or use directly from a CDN:
 
 ```html
 <script type="module">
-  import init, { CubicSpline } from "https://esm.sh/splinefit";
+  import init, { CubicSpline } from "https://esm.sh/@harbik/splinefit";
   await init();
   // ...
 </script>
@@ -23,7 +23,7 @@ Or use directly from a CDN:
 ## Quick start
 
 ```js
-import init, { CubicSpline } from "splinefit";
+import init, { CubicSpline } from "@harbik/splinefit";
 await init();
 
 // Sample data: sin(x) on [0, 2pi]

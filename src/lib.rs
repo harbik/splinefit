@@ -114,7 +114,7 @@
 //!
 //! ```html
 //! <script type="module">
-//!   import init, { CubicSpline } from "https://esm.sh/splinefit";
+//!   import init, { CubicSpline } from "https://esm.sh/@harbik/splinefit";
 //!   await init();
 //!
 //!   // Fit a smoothing spline to sin(x)

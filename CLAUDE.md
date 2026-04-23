@@ -153,7 +153,8 @@ When cutting a new release (patch, minor, or major):
 ## npm / wasm-pack publish checklist
 
 The crate compiles to WebAssembly via `wasm-pack` behind the `wasm` feature flag.
-The npm package name is `splinefit`.
+The npm package name is `@harbik/splinefit` (scoped; `splinefit` was rejected as
+too similar to an existing `spline-fit` package).
 
 1. Make sure the crate release checklist (above) is done first — the npm package
    version should match the crate version.
@@ -163,14 +164,15 @@ The npm package name is `splinefit`.
    wasm-pack build --target web --features wasm
    ```
 
-3. Copy the JavaScript-focused README into the package (wasm-pack copies the
-   Rust-oriented `README.md` by default):
+3. Copy the JavaScript-focused README and set the scoped package name (wasm-pack
+   derives the unscoped name from `Cargo.toml`):
 
    ```sh
    cp wasm/README.md pkg/README.md
+   cd pkg && npm pkg set name='@harbik/splinefit' && cd ..
    ```
 
-4. Review the generated `pkg/package.json` — verify `name` is `splinefit`,
+4. Review the generated `pkg/package.json` — verify `name` is `@harbik/splinefit`,
    `version` matches the crate, and `files` includes the `.wasm` and `.js` files.
 5. Test locally (optional):
 
