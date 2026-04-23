@@ -174,6 +174,9 @@ pub use util::*;
 #[cfg(feature = "wasm")]
 pub mod wasm;
 
+#[cfg(feature = "python")]
+pub mod python;
+
 use std::error;
 use std::fmt;
 
