@@ -784,6 +784,48 @@ pub(crate) fn fpcurf(
     let nmin = 2 * k1;
 
     // ── Part 1: knot placement ────────────────────────────────────────────────
+    if iopt < 0 {
+        // iopt = -1: user-supplied knots — do a single weighted LS fit.
+        // Knots and boundary knots have already been set by curfit_.
+        let n_us = *n as usize;
+        let nk1 = n_us - k1;
+        *fp = 0.0;
+        for i in 0..nk1 { z[i] = 0.0; }
+        for i in 0..nk1 { for j in 0..k1 { a[i + j*nest] = 0.0; } }
+        let mut h = [0.0f64; 7];
+        let mut l = k1;
+        for it in 1..=m {
+            let xi = x[it - 1];
+            let wi = w[it - 1];
+            let yi = y[it - 1] * wi;
+            while xi >= t[l] && l < nk1 { l += 1; }
+            fpbspl(t, *n as i32, k1 as i32 - 1, xi, l as i32, &mut h);
+            for i in 1..=k1 {
+                h[i - 1] *= wi;
+            }
+            let mut j_f = l - k1;
+            let mut yi_rot = yi;
+            for i in 1..=k1 {
+                j_f += 1;
+                let piv = h[i - 1];
+                if piv.abs() < f64::EPSILON { continue; }
+                let (mut cos, mut sin) = (0.0f64, 0.0f64);
+                fpgivs(piv, &mut a[j_f - 1], &mut cos, &mut sin);
+                fprota(cos, sin, &mut yi_rot, &mut z[j_f - 1]);
+                if i == k1 { break; }
+                let mut i2 = 0usize;
+                for i1 in (i + 1)..=k1 {
+                    i2 += 1;
+                    fprota(cos, sin, &mut h[i1 - 1], &mut a[j_f - 1 + i2 * nest]);
+                }
+            }
+            *fp += yi_rot * yi_rot;
+        }
+        fpback(a, z, nk1 as i32, k1 as i32, c, nest as i32);
+        *ier = -2;
+        return;
+    }
+
     if iopt >= 0 {
         let acc = tol * s;
         let nmax = m + k1;
@@ -3568,6 +3610,57 @@ mod tests {
             let dy = (xy_out[2 * i + 1] - xy[2 * i + 1]).abs();
             assert!(dx < 1e-12, "x residual at point {}: {:.3e}", i, dx);
             assert!(dy < 1e-12, "y residual at point {}: {:.3e}", i, dy);
+        }
+    }
+
+    /// curfit_ with iopt=-1 (user-supplied knots, weighted LS fit).
+    /// Reference: scipy.interpolate.LSQUnivariateSpline(x, sin(x), t_interior, k=3)
+    /// with 50 points on [0,10] and interior knots at 1,2,...,9.
+    #[test]
+    fn curfit_iopt_minus1_cardinal() {
+        const M: usize = 50;
+        const K: i32 = 3;
+        let x: Vec<f64> = (0..M).map(|i| i as f64 * 10.0 / (M - 1) as f64).collect();
+        let y: Vec<f64> = x.iter().map(|&xi| xi.sin()).collect();
+        let w = vec![1.0f64; M];
+
+        // Knot vector: (K+1)× boundary + interior + (K+1)× boundary
+        let k1 = K as usize + 1;
+        let n_interior = 9;
+        let knot_count = 2 * k1 + n_interior;
+        let mut t = vec![0.0f64; knot_count];
+        for i in 0..k1 { t[i] = 0.0; t[knot_count - 1 - i] = 10.0; }
+        for i in 0..n_interior { t[k1 + i] = (i + 1) as f64; }
+        let nest = knot_count as i32;
+        let mut n = nest;
+        let mut c = vec![0.0f64; knot_count];
+        let mut fp = 0.0f64;
+        let lwrk = curfit_lwrk(M, K as usize, knot_count);
+        let mut wrk = vec![0.0f64; lwrk];
+        let mut iwrk = vec![0i32; knot_count];
+        let mut ier = 0i32;
+        let iopt = -1i32;
+
+        unsafe {
+            curfit_(&iopt, &(M as i32), x.as_ptr(), y.as_ptr(), w.as_ptr(),
+                    &x[0], &x[M - 1], &K, &0.0f64, &nest, &mut n,
+                    t.as_mut_ptr(), c.as_mut_ptr(), &mut fp,
+                    wrk.as_mut_ptr(), &(lwrk as i32), iwrk.as_mut_ptr(), &mut ier);
+        }
+        assert!(ier <= 0, "curfit_ iopt=-1 failed: ier={ier}");
+
+        // Scipy reference coefficients (LSQUnivariateSpline)
+        let scipy_c = [
+            3.15797216e-04, 3.32519297e-01, 9.94821738e-01, 1.07606479e+00,
+            1.66769853e-01, -8.95228307e-01, -1.13447484e+00, -3.30553015e-01,
+            7.77265692e-01, 1.17034618e+00, 4.87811782e-01, -2.67284682e-01,
+            -5.43651349e-01,
+        ];
+        let nk1 = n as usize - K as usize - 1;
+        assert_eq!(nk1, scipy_c.len());
+        for i in 0..nk1 {
+            assert!((c[i] - scipy_c[i]).abs() < 1e-6,
+                "c[{i}] = {:.10e}, scipy = {:.10e}", c[i], scipy_c[i]);
         }
     }
 

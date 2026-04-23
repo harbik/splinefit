@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Compare smoothing splines at different RMS targets on data with a sharp feature."""
+"""Compare cardinal splines at different knot spacings on data with a sharp feature."""
 
 import numpy as np
 from splinefit import CubicSpline
@@ -8,15 +8,15 @@ from splinefit import CubicSpline
 x = np.linspace(0, 10, 200)
 y = np.sin(x) + 2 * np.exp(-((x - 5) ** 2) / 0.2)
 
-print("Smoothing spline fits with varying RMS target:")
-print(f"{'rms':>8}  {'knots':>6}  {'max error':>10}  {'rms error':>10}")
+print("Cardinal spline fits with varying knot spacing:")
+print(f"{'dt':>8}  {'knots':>6}  {'max error':>10}  {'rms error':>10}")
 print("-" * 42)
 
-for rms in [1.0, 0.5, 0.1, 0.05, 0.01]:
-    spline = CubicSpline.smoothing(x, y, rms=rms)
+for dt in [2.0, 1.0, 0.5, 0.25, 0.1]:
+    spline = CubicSpline.cardinal(x, y, dt=dt)
     y_fit = spline.evaluate(x)
     errors = np.abs(y - y_fit)
-    print(f"{rms:8.2f}  {spline.num_knots:6d}  {errors.max():10.6f}  {np.sqrt(np.mean(errors**2)):10.6f}")
+    print(f"{dt:8.2f}  {spline.num_knots:6d}  {errors.max():10.6f}  {np.sqrt(np.mean(errors**2)):10.6f}")
 
 # Interpolating spline captures the peak exactly
 spline_exact = CubicSpline.interpolating(x, y)
