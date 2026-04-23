@@ -193,7 +193,10 @@ feature flag.  The PyPI package name is `splinefit`.
 
 1. Make sure the crate release checklist (above) is done first — the PyPI package
    version is derived from `Cargo.toml`.
-2. Build and test locally in a virtual environment:
+2. If the Python API changed (new methods, renamed parameters, etc.), update
+   `splinefit.pyi` to match.  Maturin bundles this file into the wheel for
+   editor autocompletion and type checking.
+3. Build and test locally in a virtual environment:
 
    ```sh
    python3 -m venv .venv && source .venv/bin/activate
@@ -202,13 +205,13 @@ feature flag.  The PyPI package name is `splinefit`.
    python3 -c "from splinefit import CubicSpline; print('OK')"
    ```
 
-3. Build a release wheel:
+4. Build a release wheel:
 
    ```sh
    maturin build --release --features python
    ```
 
-4. Publish to PyPI:
+5. Publish to PyPI:
 
    ```sh
    maturin publish --features python
