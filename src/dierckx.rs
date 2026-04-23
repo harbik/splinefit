@@ -2,6 +2,44 @@
 // Copyright (c) 2021-2026, Harbers Bik LLC
 
 // Pure Rust translation of the Dierckx Fortran B-spline library.
+//
+// ## Why `unsafe extern "C"` and raw pointers?
+//
+// The 11 public entry points in this module (`curfit_`, `splev_`, `curev_`, etc.) are
+// declared `pub unsafe extern "C"` and accept raw pointers (`*const f64`, `*mut f64`,
+// `*const i32`, …) instead of idiomatic Rust slices.  This is a deliberate design
+// choice, not a limitation.
+//
+// The entire module is a **line-by-line translation** of Paul Dierckx' original Fortran
+// FITPACK library.  Every Rust function maps 1:1 to a Fortran subroutine, every loop
+// maps to the corresponding DO loop, and every array index `a[(i-1)+(j-1)*nest]` maps
+// to the Fortran column-major `a(i,j)`.  The raw-pointer signatures preserve this
+// correspondence at the API boundary: the Fortran subroutines receive arrays by address,
+// and so do ours.
+//
+// This 1:1 correspondence provides three key benefits:
+//
+// 1. **Verifiability** — any line of Rust can be compared side-by-side with the original
+//    Fortran source (available at <http://www.netlib.org/dierckx/>).  Translation bugs
+//    are caught by reading two lines, not by reasoning about an abstracted rewrite.
+//
+// 2. **Numerical fidelity** — the algorithms are mathematically subtle (Givens rotations,
+//    knot insertion, B-spline recurrences).  A mechanical translation preserves the exact
+//    order of operations, accumulator structure, and loop bounds that Dierckx validated
+//    in his 1993 book and that SciPy relies on.  Refactoring to idiomatic Rust would risk
+//    introducing silent numerical drift that is hard to test for.
+//
+// 3. **Upstream traceability** — when SciPy or the Fortran community discovers a bug in
+//    FITPACK, the fix can be applied here by reading the Fortran patch and updating the
+//    matching Rust line.  An abstracted rewrite would require re-deriving each fix.
+//
+// The `unsafe` boundary is contained: the module is private (`mod dierckx`), and all
+// public-facing callers (`curfit.rs`, `concur.rs`, `evaluate.rs`, `ops.rs`, …) convert
+// between safe Rust types and raw pointers at the call site.  No `unsafe` leaks into
+// the public API.
+//
+// ## Translation conventions
+//
 // All Fortran `real` compiled with -fdefault-real-8 → f64.
 // All Fortran `integer` → i32 (or usize for indexing).
 // Fortran 1-based arrays → 0-based in Rust.
