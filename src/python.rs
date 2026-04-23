@@ -18,6 +18,29 @@ use spliny::SplineCurve;
 
 use crate::{CubicSplineFit, evaluate, ops};
 
+/// Convert a PyReadonlyArray1 to Vec<f64>, returning a Python error on failure.
+fn to_vec(arr: &PyReadonlyArray1<f64>) -> PyResult<Vec<f64>> {
+    arr.to_vec()
+        .map_err(|e| PyValueError::new_err(format!("failed to convert array: {e}")))
+}
+
+/// Validate and convert x/y arrays for fitting.
+fn extract_xy(x: &PyReadonlyArray1<f64>, y: &PyReadonlyArray1<f64>) -> PyResult<(Vec<f64>, Vec<f64>)> {
+    let xv = to_vec(x)?;
+    let yv = to_vec(y)?;
+    if xv.len() != yv.len() {
+        return Err(PyValueError::new_err(
+            format!("x and y must have the same length, got {} and {}", xv.len(), yv.len())
+        ));
+    }
+    if xv.len() < 4 {
+        return Err(PyValueError::new_err(
+            format!("need at least 4 data points, got {}", xv.len())
+        ));
+    }
+    Ok((xv, yv))
+}
+
 /// A cubic B-spline curve fitted to 1-D data.
 ///
 /// Construct via class methods:
@@ -55,7 +78,8 @@ impl CubicSpline {
     /// CubicSpline
     #[staticmethod]
     fn smoothing(x: PyReadonlyArray1<f64>, y: PyReadonlyArray1<f64>, rms: f64) -> PyResult<Self> {
-        let s = CubicSplineFit::new(x.to_vec().unwrap(), y.to_vec().unwrap())
+        let (xv, yv) = extract_xy(&x, &y)?;
+        let s = CubicSplineFit::new(xv, yv)
             .smoothing_spline(rms)
             .map_err(|e| PyValueError::new_err(e.to_string()))?;
         Ok(CubicSpline { inner: s })
@@ -75,7 +99,8 @@ impl CubicSpline {
     /// CubicSpline
     #[staticmethod]
     fn interpolating(x: PyReadonlyArray1<f64>, y: PyReadonlyArray1<f64>) -> PyResult<Self> {
-        let s = CubicSplineFit::new(x.to_vec().unwrap(), y.to_vec().unwrap())
+        let (xv, yv) = extract_xy(&x, &y)?;
+        let s = CubicSplineFit::new(xv, yv)
             .interpolating_spline()
             .map_err(|e| PyValueError::new_err(e.to_string()))?;
         Ok(CubicSpline { inner: s })
@@ -97,7 +122,8 @@ impl CubicSpline {
     /// CubicSpline
     #[staticmethod]
     fn cardinal(x: PyReadonlyArray1<f64>, y: PyReadonlyArray1<f64>, dt: f64) -> PyResult<Self> {
-        let s = CubicSplineFit::new(x.to_vec().unwrap(), y.to_vec().unwrap())
+        let (xv, yv) = extract_xy(&x, &y)?;
+        let s = CubicSplineFit::new(xv, yv)
             .cardinal_spline(dt)
             .map_err(|e| PyValueError::new_err(e.to_string()))?;
         Ok(CubicSpline { inner: s })
@@ -114,7 +140,9 @@ impl CubicSpline {
     /// -------
     /// numpy.ndarray
     fn evaluate<'py>(&self, py: Python<'py>, x: PyReadonlyArray1<f64>) -> PyResult<Bound<'py, PyArray1<f64>>> {
-        let y = evaluate::evaluate(&self.inner, x.as_slice().unwrap())
+        let x_slice = x.as_slice()
+            .map_err(|e| PyValueError::new_err(format!("failed to read array: {e}")))?;
+        let y = evaluate::evaluate(&self.inner, x_slice)
             .map_err(|e| PyValueError::new_err(e.to_string()))?;
         Ok(PyArray1::from_vec(py, y))
     }
