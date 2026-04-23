@@ -6,6 +6,7 @@ build-backend = "maturin"
 name = "splinefit"
 dynamic = ["version"]
 description = "B-spline curve fitting — pure-Rust Dierckx engine with Python bindings"
+readme = "python/README.md"
 license = {text = "MIT OR Apache-2.0"}
 requires-python = ">=3.9"
 dependencies = ["numpy"]
@@ -25,3 +26,4 @@ Documentation = "https://docs.rs/splinefit"
 
 [tool.maturin]
 features = ["python"]
+include = ["splinefit.pyi"]
