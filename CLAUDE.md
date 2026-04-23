@@ -160,7 +160,7 @@ The npm package name is `splinefit`.
 2. Build the wasm package:
 
    ```sh
-   wasm-pack build --target web --features wasm --scope splinefit
+   wasm-pack build --target web --features wasm
    ```
 
 3. Copy the JavaScript-focused README into the package (wasm-pack copies the

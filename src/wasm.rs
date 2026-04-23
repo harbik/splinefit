@@ -34,8 +34,8 @@ impl CubicSpline {
     /// `x` and `y` must have the same length (≥ 4) with `x` strictly increasing.
     /// `rms` controls the trade-off between smoothness and closeness of fit:
     /// smaller values produce more knots and a closer fit.
-    pub fn smoothing(x: &[f64], y: &[f64], rms: f64) -> Result<CubicSpline, JsError> {
-        let s = CubicSplineFit::new(x.to_vec(), y.to_vec())
+    pub fn smoothing(x: Vec<f64>, y: Vec<f64>, rms: f64) -> Result<CubicSpline, JsError> {
+        let s = CubicSplineFit::new(x, y)
             .smoothing_spline(rms)
             .map_err(|e| JsError::new(&e.to_string()))?;
         Ok(CubicSpline { inner: s })
@@ -44,8 +44,8 @@ impl CubicSpline {
     /// Fit an interpolating cubic spline that passes through every data point.
     ///
     /// `x` and `y` must have the same length (≥ 4) with `x` strictly increasing.
-    pub fn interpolating(x: &[f64], y: &[f64]) -> Result<CubicSpline, JsError> {
-        let s = CubicSplineFit::new(x.to_vec(), y.to_vec())
+    pub fn interpolating(x: Vec<f64>, y: Vec<f64>) -> Result<CubicSpline, JsError> {
+        let s = CubicSplineFit::new(x, y)
             .interpolating_spline()
             .map_err(|e| JsError::new(&e.to_string()))?;
         Ok(CubicSpline { inner: s })
@@ -54,8 +54,8 @@ impl CubicSpline {
     /// Fit a cardinal cubic spline on an equidistant knot grid with spacing `dt`.
     ///
     /// `x` and `y` must have the same length (≥ 4) with `x` strictly increasing.
-    pub fn cardinal(x: &[f64], y: &[f64], dt: f64) -> Result<CubicSpline, JsError> {
-        let s = CubicSplineFit::new(x.to_vec(), y.to_vec())
+    pub fn cardinal(x: Vec<f64>, y: Vec<f64>, dt: f64) -> Result<CubicSpline, JsError> {
+        let s = CubicSplineFit::new(x, y)
             .cardinal_spline(dt)
             .map_err(|e| JsError::new(&e.to_string()))?;
         Ok(CubicSpline { inner: s })
